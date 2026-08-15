@@ -1,0 +1,29 @@
+# Bu dosya eski versiyondur.
+# Lutfen root dizindeki docker-compose.yml dosyasini kullanin:
+#   cd ..
+#   docker-compose up -d --build
+
+# Sadece MySQL'i ayaga kaldirmak icin:
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: kampus-kayip-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: "123456"
+      MYSQL_DATABASE: kampus_kayip_esya
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+      TZ: Europe/Istanbul
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_data:

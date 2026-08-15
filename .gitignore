@@ -1,0 +1,46 @@
+# ═══════════════════════════════════════════════════
+# Monorepo .gitignore
+# ═══════════════════════════════════════════════════
+
+# --- Environment ---
+.env
+.env.local
+.env.production
+
+# --- Java / Gradle (Backend) ---
+kampus-kayip-esya-backend/build/
+kampus-kayip-esya-backend/.gradle/
+*.class
+*.jar
+*.war
+!gradlew.jar
+
+# --- Node / Expo (Frontend) ---
+kampus-kayip-esya/node_modules/
+kampus-kayip-esya/.expo/
+kampus-kayip-esya/dist/
+kampus-kayip-esya/web-build/
+
+# --- IDE ---
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+
+# --- Nested git (frontend submodule degil) ---
+kampus-kayip-esya/.git/
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Uploads ---
+kampus-kayip-esya-backend/uploads/*
+!kampus-kayip-esya-backend/uploads/.gitkeep
+
+# --- Logs ---
+*.log
+npm-debug.log*

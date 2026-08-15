@@ -1,0 +1,86 @@
+# ═══════════════════════════════════════════════════
+# Kampus Kayip Esya — Full Stack Docker Compose
+#
+# Kullanim:
+#   docker-compose up -d          → Tum servisleri baslat
+#   docker-compose up -d --build  → Yeniden build edip baslat
+#   docker-compose down            → Servisleri durdur
+#   docker-compose down -v         → Servisleri durdur + veritabanini sil
+#   docker-compose logs -f backend → Backend loglarini takip et
+#
+# Erisim:
+#   Frontend:  http://localhost:3000
+#   Backend:   http://localhost:8080
+#   MySQL:     localhost:3306
+# ═══════════════════════════════════════════════════
+
+services:
+
+  # --- MySQL 8.0 ---
+  mysql:
+    image: mysql:8.0
+    container_name: kampus-kayip-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-123456}
+      MYSQL_DATABASE: kampus_kayip_esya
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+      TZ: Europe/Istanbul
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_PASSWORD:-123456}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - kampus-net
+
+  # --- Spring Boot Backend ---
+  backend:
+    build:
+      context: ./kampus-kayip-esya-backend
+      dockerfile: Dockerfile
+    container_name: kampus-kayip-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/kampus_kayip_esya?useSSL=false&serverTimezone=Europe/Istanbul&allowPublicKeyRetrieval=true
+      DB_USERNAME: ${DB_USERNAME:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-123456}
+      JWT_SECRET: ${JWT_SECRET:-YediTepeUniversitesiKampusKayipEsyaUygulamasiGizliAnahtar2024SecretKey}
+    volumes:
+      - backend_uploads:/app/uploads
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - kampus-net
+
+  # --- React Native Web (Expo) Frontend ---
+  frontend:
+    build:
+      context: ./kampus-kayip-esya
+      dockerfile: Dockerfile
+      args:
+        EXPO_PUBLIC_API_BASE_URL: /api
+    container_name: kampus-kayip-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - kampus-net
+
+volumes:
+  mysql_data:
+  backend_uploads:
+
+networks:
+  kampus-net:
+    driver: bridge
