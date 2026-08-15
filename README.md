@@ -20,7 +20,7 @@ Yeditepe Universitesi kampusunde kaybedilen/bulunan esyalari yonetmek icin gelis
 
 ```bash
 git clone https://github.com/SamiSidar/KampusKayipEsya.git
-cd KampusKayipEsya/kampus-kayip-esya-backend
+cd KampusKayipEsya
 
 # (Opsiyonel) Production icin secret'lari ayarla
 cp .env.example .env
