@@ -194,13 +194,15 @@ export function ClaimRequestScreen() {
             </Text>
           </View>
 
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={[
               styles.submitButton,
               isSubmitting && { opacity: 0.7 },
             ]}
             onPress={handleSubmit}
             disabled={isSubmitting}
+            accessibilityState={{ disabled: isSubmitting }}
+            accessibilityLabel="Talebi gönder"
           >
             {isSubmitting ? (
               <ActivityIndicator color={colors.white} />
@@ -244,14 +246,14 @@ const styles = StyleSheet.create({
   },
 
   itemSummary: {
-    backgroundColor: 'rgba(34, 113, 196, 0.08)',
+    backgroundColor: colors.blueTint08,
     borderRadius: 18,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 18,
     borderWidth: 1,
-    borderColor: 'rgba(34, 113, 196, 0.14)',
+    borderColor: colors.blueTint14,
   },
 
   itemIconBox: {
@@ -286,7 +288,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     paddingHorizontal: 9,
     paddingVertical: 5,
     borderRadius: 13,
@@ -311,7 +313,7 @@ const styles = StyleSheet.create({
 
   input: {
     borderWidth: 1,
-    borderColor: 'rgba(193, 198, 211, 0.85)',
+    borderColor: colors.borderLight85,
     borderRadius: 15,
     backgroundColor: colors.white,
     paddingHorizontal: 15,
@@ -331,13 +333,13 @@ const styles = StyleSheet.create({
   },
 
   infoBox: {
-    backgroundColor: '#F2F3FB',
+    backgroundColor: colors.surfaceLight,
     borderRadius: 16,
     padding: 13,
     flexDirection: 'row',
     alignItems: 'flex-start',
     borderWidth: 1,
-    borderColor: 'rgba(193, 198, 211, 0.55)',
+    borderColor: colors.borderLight55,
     marginBottom: 18,
   },
 

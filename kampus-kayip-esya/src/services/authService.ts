@@ -8,7 +8,15 @@ export const authService = {
   },
 
   register(payload: RegisterRequest) {
-    return apiClient.post<LoginResponse>(ENDPOINTS.auth.register, payload);
+    return apiClient.post<void>(ENDPOINTS.auth.register, payload);
+  },
+
+  verifyEmail(email: string, code: string) {
+    return apiClient.post<void>(ENDPOINTS.auth.verifyEmail, { email, code });
+  },
+
+  resendVerification(email: string) {
+    return apiClient.post<void>(ENDPOINTS.auth.resendVerification, { email });
   },
 
   /** Refresh token ile yeni access + refresh token çifti alır */

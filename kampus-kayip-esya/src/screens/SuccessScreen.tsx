@@ -56,16 +56,18 @@ export function SuccessScreen() {
             </View>
           </View>
 
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={styles.primaryButton}
             onPress={() => resetTo('MyReports')}
+            accessibilityLabel="Bildirilerime git"
           >
             <Text style={styles.primaryButtonText}>Bildirilerime Git</Text>
           </Pressable>
 
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={styles.secondaryButton}
             onPress={() => resetTo('StudentHome')}
+            accessibilityLabel="Ana sayfaya dön"
           >
             <Text style={styles.secondaryButtonText}>Ana Sayfaya Dön</Text>
           </Pressable>
@@ -143,13 +145,13 @@ const styles = StyleSheet.create({
 
   statusBox: {
     width: '100%',
-    backgroundColor: 'rgba(34, 113, 196, 0.08)',
+    backgroundColor: colors.blueTint08,
     borderRadius: 16,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'flex-start',
     borderWidth: 1,
-    borderColor: 'rgba(34, 113, 196, 0.18)',
+    borderColor: colors.blueTint18,
     marginBottom: 22,
   },
 

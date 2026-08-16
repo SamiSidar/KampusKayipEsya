@@ -52,7 +52,9 @@ services:
       DB_URL: jdbc:mysql://mysql:3306/kampus_kayip_esya?useSSL=false&serverTimezone=Europe/Istanbul&allowPublicKeyRetrieval=true
       DB_USERNAME: ${DB_USERNAME:-root}
       DB_PASSWORD: ${DB_PASSWORD:-123456}
-      JWT_SECRET: ${JWT_SECRET:-YediTepeUniversitesiKampusKayipEsyaUygulamasiGizliAnahtar2024SecretKey}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET environment variable zorunludur - .env dosyasina ekleyin}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
     volumes:
       - backend_uploads:/app/uploads
     depends_on:

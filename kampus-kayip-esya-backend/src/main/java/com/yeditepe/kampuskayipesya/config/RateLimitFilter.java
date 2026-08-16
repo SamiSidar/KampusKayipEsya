@@ -72,6 +72,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
         } else if (path.equals("/api/auth/forgot-password")) {
             group = "forgot-password";
             limit = FORGOT_PASSWORD_LIMIT;
+        } else if (path.equals("/api/auth/verify-email")
+                || path.equals("/api/auth/resend-verification")) {
+            group = "verification";
+            limit = LOGIN_LIMIT; // dakikada 10
         } else {
             group = "general";
             limit = GENERAL_LIMIT;

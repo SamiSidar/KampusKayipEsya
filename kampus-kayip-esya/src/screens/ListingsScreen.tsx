@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -20,14 +20,25 @@ import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../context/AuthContext';
 import { foundItemsService } from '../services/foundItemsService';
 import {
+import { ImageWithFallback } from '../components/ImageWithFallback';
   FoundItem,
+  FoundItemCategory,
   getFoundItemCategoryLabel,
   getFoundItemStatusLabel,
 } from '../types/foundItem';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const filters = ['Hepsi', 'Kategori', 'Kampüs', 'Tarih', 'Durum'];
+const categoryFilters: { label: string; value: FoundItemCategory | null }[] = [
+  { label: 'Hepsi', value: null },
+  { label: 'Cüzdan', value: 'WALLET' },
+  { label: 'Anahtar', value: 'KEY' },
+  { label: 'Elektronik', value: 'ELECTRONIC' },
+  { label: 'Çanta', value: 'BAG' },
+  { label: 'Kart', value: 'CARD' },
+  { label: 'Aksesuar', value: 'ACCESSORY' },
+  { label: 'Diğer', value: 'OTHER' },
+];
 
 export function ListingsScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -36,6 +47,7 @@ export function ListingsScreen() {
   const [items, setItems] = useState<FoundItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchText, setSearchText] = useState('');
+  const [activeCategory, setActiveCategory] = useState<FoundItemCategory | null>(null);
 
   useEffect(() => {
     loadItems();
@@ -70,25 +82,45 @@ export function ListingsScreen() {
     }
   }, [token, loadItems]);
 
+  const handleCategoryFilter = useCallback(async (category: FoundItemCategory | null) => {
+    setActiveCategory(category);
+    setSearchText('');
+    try {
+      setIsLoading(true);
+      const data = category
+        ? await foundItemsService.getByCategory(category, token)
+        : await foundItemsService.getFoundItems(token);
+      setItems(data);
+    } catch (error) {
+      console.error('Filtre hatası:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [token]);
+
   return (
     <View style={styles.container}>
       <AppHeader title="İlanlar" showBack={false} showNotification />
 
       <FlatList
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={5}
         data={items}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={styles.itemCard}
             onPress={() =>
               navigation.navigate('ItemDetail', {
                 itemId: item.id,
               })
             }
+            accessibilityLabel={`${item.title} detayını görüntüle`}
           >
             <View style={styles.imagePanel}>
               {item.imageUrl ? (
-                <Image
+                <ImageWithFallback
                   source={{ uri: item.imageUrl }}
                   style={styles.itemImage}
                 />
@@ -164,18 +196,15 @@ export function ListingsScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.filterList}
             >
-              {filters.map((filter, index) => {
-                const isActive = index === 0;
-                const hasArrow =
-                  filter === 'Kategori' ||
-                  filter === 'Kampüs' ||
-                  filter === 'Tarih' ||
-                  filter === 'Durum';
+              {categoryFilters.map((filter) => {
+                const isActive = activeCategory === filter.value;
 
                 return (
-                  <Pressable
-                    key={filter}
+                  <Pressable accessibilityRole="button"
+                    key={filter.label}
                     style={[styles.filterChip, isActive && styles.activeFilterChip]}
+                    onPress={() => handleCategoryFilter(filter.value)}
+                    accessibilityLabel={`${filter.label} kategorisi filtrele`}
                   >
                     <Text
                       style={[
@@ -183,17 +212,8 @@ export function ListingsScreen() {
                         isActive && styles.activeFilterText,
                       ]}
                     >
-                      {filter}
+                      {filter.label}
                     </Text>
-
-                    {hasArrow ? (
-                      <Ionicons
-                        name="chevron-down"
-                        size={15}
-                        color={isActive ? colors.white : colors.textPrimary}
-                        style={styles.filterArrow}
-                      />
-                    ) : null}
                   </Pressable>
                 );
               })}
@@ -263,7 +283,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.card,
     borderRadius: 25,
     borderWidth: 1,
-    borderColor: 'rgba(193, 198, 211, 0.85)',
+    borderColor: colors.borderLight85,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 15,
@@ -294,12 +314,12 @@ const styles = StyleSheet.create({
   },
 
   filterChip: {
-    minHeight: 38,
+    minHeight: 44,
     paddingHorizontal: 16,
     borderRadius: 19,
     backgroundColor: colors.card,
     borderWidth: 1,
-    borderColor: 'rgba(193, 198, 211, 0.85)',
+    borderColor: colors.borderLight85,
     flexDirection: 'row',
     alignItems: 'center',
     marginRight: 8,
@@ -318,10 +338,6 @@ const styles = StyleSheet.create({
 
   activeFilterText: {
     color: colors.white,
-  },
-
-  filterArrow: {
-    marginLeft: 4,
   },
 
   sectionHeader: {
@@ -364,7 +380,7 @@ const styles = StyleSheet.create({
     height: 112,
     borderRadius: 17,
     overflow: 'hidden',
-    backgroundColor: '#E7E8F0',
+    backgroundColor: colors.surfaceMuted,
   },
 
   itemImage: {
@@ -386,7 +402,7 @@ const styles = StyleSheet.create({
 
   verticalDivider: {
     width: 1,
-    backgroundColor: 'rgba(193, 198, 211, 0.45)',
+    backgroundColor: colors.borderLight45,
     marginHorizontal: 13,
     borderRadius: 1,
   },
@@ -441,9 +457,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 6, minHeight: 44,
     borderRadius: 14,
     marginTop: 10,
   },

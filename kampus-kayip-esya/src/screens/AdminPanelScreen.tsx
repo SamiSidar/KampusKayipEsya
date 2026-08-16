@@ -111,10 +111,11 @@ export function AdminPanelScreen() {
         ) : (
           <View style={styles.grid}>
             {adminCards.map(card => (
-              <Pressable
+              <Pressable accessibilityRole="button"
                 key={card.id}
                 style={styles.dashboardCard}
                 onPress={() => handleCardPress(card.id)}
+                accessibilityLabel={`${card.title}: ${card.count}`}
               >
                 <View style={styles.iconBox}>
                   {card.iconSet === 'material' ? (
@@ -221,7 +222,7 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 18,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 14,
@@ -248,14 +249,14 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     fontWeight: '600',
     color: colors.textSecondary,
-    minHeight: 34,
+    minHeight: 44,
   },
 
   cardFooter: {
     marginTop: 12,
-    minHeight: 34,
+    minHeight: 44,
     borderRadius: 17,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     paddingHorizontal: 10,
     flexDirection: 'row',
     alignItems: 'center',

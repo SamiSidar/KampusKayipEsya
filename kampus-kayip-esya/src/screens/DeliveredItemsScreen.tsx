@@ -72,14 +72,18 @@ export function DeliveredItemsScreen() {
       <AppHeader title="Teslim Edilen" showBack showNotification={false} />
 
       <FlatList
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={5}
         data={deliveries}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item: delivery }) => (
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={styles.itemCard}
             onPress={() =>
               navigation.navigate('DeliveryDetail', { deliveryId: delivery.id })
             }
+            accessibilityLabel={`${delivery.item.title} teslim detayı`}
           >
             <View style={styles.iconPanel}>
               <MaterialCommunityIcons
@@ -127,11 +131,12 @@ export function DeliveredItemsScreen() {
               </View>
 
               <View style={styles.actionRow}>
-                <Pressable
+                <Pressable accessibilityRole="button"
                   style={styles.detailButton}
                   onPress={() =>
                     navigation.navigate('DeliveryDetail', { deliveryId: delivery.id })
                   }
+                  accessibilityLabel={`${delivery.item.title} teslim detayını gör`}
                 >
                   <Ionicons name="document-text-outline" size={15} color={colors.yeditepeBlue} />
                   <Text style={styles.detailButtonText}>Teslim Detayı</Text>
@@ -191,18 +196,18 @@ const styles = StyleSheet.create({
   },
   iconPanel: {
     width: 72, height: 112, borderRadius: 18,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     alignItems: 'center', justifyContent: 'center',
   },
   verticalDivider: {
-    width: 1, backgroundColor: 'rgba(193, 198, 211, 0.45)', marginHorizontal: 13, borderRadius: 1,
+    width: 1, backgroundColor: colors.borderLight45, marginHorizontal: 13, borderRadius: 1,
   },
   itemContent: { flex: 1, minWidth: 0, justifyContent: 'space-between', paddingVertical: 1 },
   topRow: { flexDirection: 'row', alignItems: 'center' },
   itemTitle: { flex: 1, fontSize: 15.5, fontWeight: '800', color: colors.textPrimary, marginRight: 8 },
   statusBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(46, 125, 50, 0.10)', paddingHorizontal: 9, paddingVertical: 6, borderRadius: 14,
+    backgroundColor: colors.successTint10, paddingHorizontal: 9, paddingVertical: 6, minHeight: 44, borderRadius: 14,
   },
   statusText: { fontSize: 10.5, fontWeight: '800', color: colors.success },
   metaRows: { gap: 5, marginTop: 8 },
@@ -211,8 +216,8 @@ const styles = StyleSheet.create({
   infoValue: { marginLeft: 4, flex: 1, fontSize: 12, fontWeight: '600', color: colors.textPrimary },
   actionRow: { marginTop: 12, alignItems: 'flex-start' },
   detailButton: {
-    minHeight: 38, paddingHorizontal: 16, borderRadius: 19,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    minHeight: 44, paddingHorizontal: 16, borderRadius: 19,
+    backgroundColor: colors.blueTint10,
     alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6,
   },
   detailButtonText: { color: colors.yeditepeBlue, fontSize: 12.5, fontWeight: '800' },

@@ -18,6 +18,7 @@ import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../context/AuthContext';
 import { foundItemsService } from '../services/foundItemsService';
 import { FoundItem } from '../types/foundItem';
+import { ImageWithFallback } from '../components/ImageWithFallback';
 
 // ============================================================
 // StudentHomeScreen — Öğrenci ana sayfa ekranı.
@@ -71,9 +72,10 @@ export function StudentHomeScreen() {
       >
         <View style={styles.blueBackground} />
 
-        <Pressable
+        <Pressable accessibilityRole="button"
           style={styles.reportCard}
           onPress={() => navigation.navigate('LostReport')}
+          accessibilityLabel="Kayıp eşya bildir"
         >
           <View style={styles.reportIconWrap}>
             <MaterialCommunityIcons
@@ -92,7 +94,7 @@ export function StudentHomeScreen() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Son Eklenen Eşyalar</Text>
 
-          <Pressable onPress={() => navigation.navigate('Listings')}>
+          <Pressable accessibilityRole="button" onPress={() => navigation.navigate('Listings')} accessibilityLabel="Tüm ilanları gör">
             <Text style={styles.seeAllText}>Tümü</Text>
           </Pressable>
         </View>
@@ -113,7 +115,7 @@ export function StudentHomeScreen() {
             contentContainerStyle={styles.recentList}
           >
             {items.map(item => (
-              <Pressable
+              <Pressable accessibilityRole="button"
                 key={item.id}
                 style={styles.itemCard}
                 onPress={() =>
@@ -121,9 +123,10 @@ export function StudentHomeScreen() {
                     itemId: item.id,
                   })
                 }
+                accessibilityLabel={`${item.title} detayını görüntüle`}
               >
                 {item.imageUrl ? (
-                  <Image
+                  <ImageWithFallback
                     source={{ uri: item.imageUrl }}
                     style={styles.itemImage}
                   />
@@ -265,7 +268,7 @@ const styles = StyleSheet.create({
   itemImage: {
     width: '100%',
     height: 102,
-    backgroundColor: '#E7E8F0',
+    backgroundColor: colors.surfaceMuted,
   },
 
   itemImagePlaceholder: {

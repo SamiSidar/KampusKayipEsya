@@ -1,16 +1,58 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TextInput,
   Pressable,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
 import { AppHeader } from '../components/AppHeader';
+import { RootStackParamList } from '../navigation/types';
+import { authService } from '../services/authService';
+
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export function ForgotPasswordScreen() {
+  const navigation = useNavigation<NavigationProp>();
+
+  const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+
+  async function handleSubmit() {
+    if (!email.trim()) {
+      setErrorMessage('Email adresi giriniz');
+      return;
+    }
+
+    const emailLower = email.trim().toLowerCase();
+    if (!emailLower.endsWith('@std.yeditepe.edu.tr') && !emailLower.endsWith('@yeditepe.edu.tr')) {
+      setErrorMessage('Sadece @std.yeditepe.edu.tr veya @yeditepe.edu.tr uzantılı adresler kabul edilir');
+      return;
+    }
+
+    setErrorMessage('');
+    setSuccessMessage('');
+    setIsLoading(true);
+
+    try {
+      await authService.forgotPassword(emailLower);
+      setSuccessMessage('Şifre sıfırlama bağlantısı email adresinize gönderildi.');
+      setEmail('');
+    } catch (error: any) {
+      setErrorMessage(error.message || 'İşlem başarısız. Lütfen tekrar deneyin.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   return (
     <View style={styles.container}>
       <AppHeader title="Parolamı Unuttum" showBack showNotification={false} />
@@ -28,9 +70,23 @@ export function ForgotPasswordScreen() {
           <Text style={styles.title}>Parola Sıfırlama</Text>
 
           <Text style={styles.description}>
-            A7/OBS kullanıcı hesabınıza bağlı e-posta adresinizi girin. Parola
-            sıfırlama yönergeleri sistem üzerinden gönderilecektir.
+            Kayıtlı e-posta adresinizi girin. Şifre sıfırlama bağlantısı
+            gönderilecektir.
           </Text>
+
+          {errorMessage ? (
+            <View style={styles.errorBox}>
+              <Ionicons name="alert-circle" size={18} color={colors.error} />
+              <Text style={styles.errorText}>{errorMessage}</Text>
+            </View>
+          ) : null}
+
+          {successMessage ? (
+            <View style={styles.successBox}>
+              <Ionicons name="checkmark-circle" size={18} color={colors.success} />
+              <Text style={styles.successText}>{successMessage}</Text>
+            </View>
+          ) : null}
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>E-posta Adresi</Text>
@@ -47,29 +103,36 @@ export function ForgotPasswordScreen() {
                 placeholder="ornek@yeditepe.edu.tr"
                 placeholderTextColor={colors.textSecondary}
                 style={styles.input}
+                value={email}
+                onChangeText={(t) => { setEmail(t); setErrorMessage(''); setSuccessMessage(''); }}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                autoCorrect={false}
+                editable={!isLoading}
+                onSubmitEditing={handleSubmit}
               />
             </View>
           </View>
 
-          <Pressable style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>Sıfırlama Bağlantısı Gönder</Text>
+          <Pressable accessibilityRole="button"
+            style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
+            onPress={handleSubmit}
+            disabled={isLoading}
+            accessibilityState={{ disabled: isLoading }}
+            accessibilityLabel="Sıfırlama bağlantısı gönder"
+          >
+            {isLoading ? (
+              <ActivityIndicator color={colors.white} size="small" />
+            ) : (
+              <Text style={styles.primaryButtonText}>Sıfırlama Bağlantısı Gönder</Text>
+            )}
           </Pressable>
 
-          <View style={styles.infoBox}>
-            <Ionicons
-              name="information-circle-outline"
-              size={20}
-              color={colors.yeditepeBlue}
-              style={styles.infoIcon}
-            />
-
-            <Text style={styles.infoText}>
-              Parola işlemleri Yeditepe Üniversitesi kimlik doğrulama sistemi
-              üzerinden yürütülür.
+          <Pressable accessibilityRole="button" style={styles.loginLink} onPress={() => navigation.navigate('Login')} accessibilityLabel="Giriş yap sayfasına git">
+            <Text style={styles.loginLinkText}>
+              Şifrenizi hatırlıyor musunuz? <Text style={styles.loginLinkBold}>Giriş Yap</Text>
             </Text>
-          </View>
+          </Pressable>
         </View>
       </View>
     </View>
@@ -108,7 +171,7 @@ const styles = StyleSheet.create({
     width: 88,
     height: 88,
     borderRadius: 44,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 18,
@@ -130,6 +193,40 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
 
+  errorBox: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.errorLight,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    gap: 8,
+  },
+
+  errorText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.error,
+  },
+
+  successBox: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.successLight,
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+    gap: 8,
+  },
+
+  successText: {
+    flex: 1,
+    fontSize: 13,
+    color: colors.success,
+  },
+
   inputGroup: {
     width: '100%',
     marginBottom: 18,
@@ -145,7 +242,7 @@ const styles = StyleSheet.create({
   inputWrapper: {
     minHeight: 52,
     borderWidth: 1,
-    borderColor: 'rgba(193, 198, 211, 0.85)',
+    borderColor: colors.borderLight85,
     borderRadius: 16,
     backgroundColor: colors.white,
     flexDirection: 'row',
@@ -182,32 +279,28 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+
   primaryButtonText: {
     color: colors.white,
     fontSize: 14.5,
     fontWeight: '800',
   },
 
-  infoBox: {
-    width: '100%',
-    backgroundColor: '#F2F3FB',
-    borderRadius: 16,
-    padding: 13,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    borderWidth: 1,
-    borderColor: 'rgba(193, 198, 211, 0.55)',
+  loginLink: {
+    marginTop: 4,
+    alignItems: 'center',
   },
 
-  infoIcon: {
-    marginRight: 9,
-    marginTop: 1,
+  loginLinkText: {
+    fontSize: 13.5,
+    color: colors.textSecondary,
   },
 
-  infoText: {
-    flex: 1,
-    fontSize: 12.4,
-    lineHeight: 18,
-    color: colors.textPrimary,
+  loginLinkBold: {
+    color: colors.yeditepeBlue,
+    fontWeight: '800',
   },
 });

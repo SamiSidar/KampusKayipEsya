@@ -10,15 +10,18 @@ import org.springframework.web.bind.annotation.*;
 /**
  * AuthController — Kimlik doğrulama ve profil endpoint'leri.
  *
- * POST /api/auth/register          → Yeni öğrenci kaydı
- * POST /api/auth/login             → Email + şifre ile giriş, JWT token döner
- * GET  /api/auth/me                → Token'daki kullanıcının bilgilerini döner
- * POST /api/auth/forgot-password   → Şifre sıfırlama token'ı üretir
- * POST /api/auth/reset-password    → Token ile şifre sıfırlar
- * PUT  /api/auth/profile           → Profil bilgilerini günceller
- * PUT  /api/auth/change-password   → Şifre değiştirir (mevcut şifre gerekli)
+ * POST /api/auth/register              → Yeni öğrenci kaydı (doğrulama kodu gönderir)
+ * POST /api/auth/verify-email          → Email doğrulama kodu kontrolü
+ * POST /api/auth/resend-verification   → Yeni doğrulama kodu gönderir
+ * POST /api/auth/login                 → Email + şifre ile giriş, JWT token döner
+ * GET  /api/auth/me                    → Token'daki kullanıcının bilgilerini döner
+ * POST /api/auth/forgot-password       → Şifre sıfırlama token'ı üretir
+ * POST /api/auth/reset-password        → Token ile şifre sıfırlar
+ * PUT  /api/auth/profile               → Profil bilgilerini günceller
+ * PUT  /api/auth/change-password       → Şifre değiştirir (mevcut şifre gerekli)
  *
- * Register, login, forgot-password, reset-password public'tir (token gerekmez).
+ * Register, verify-email, resend-verification, login, forgot-password,
+ * reset-password public'tir (token gerekmez).
  * Diğer endpoint'ler token gerektirir.
  */
 @RestController
@@ -32,12 +35,26 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthResponse>> register(
+    public ResponseEntity<ApiResponse<Void>> register(
             @Valid @RequestBody RegisterRequest request) {
-        AuthResponse authResponse = authService.register(request);
+        authService.register(request);
         return new ResponseEntity<>(
-                ApiResponse.success("Kayıt başarılı", authResponse),
+                ApiResponse.success("Kayıt başarılı. Doğrulama kodu email adresinize gönderildi.", null),
                 HttpStatus.CREATED);
+    }
+
+    @PostMapping("/verify-email")
+    public ResponseEntity<ApiResponse<Void>> verifyEmail(
+            @Valid @RequestBody VerifyEmailRequest request) {
+        authService.verifyEmail(request.getEmail(), request.getCode());
+        return ResponseEntity.ok(ApiResponse.success("Email başarıyla doğrulandı. Artık giriş yapabilirsiniz.", null));
+    }
+
+    @PostMapping("/resend-verification")
+    public ResponseEntity<ApiResponse<Void>> resendVerification(
+            @Valid @RequestBody ResendVerificationRequest request) {
+        authService.resendVerificationCode(request.getEmail());
+        return ResponseEntity.ok(ApiResponse.success("Yeni doğrulama kodu gönderildi.", null));
     }
 
     @PostMapping("/login")

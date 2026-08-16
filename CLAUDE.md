@@ -52,6 +52,8 @@ cd kampus-kayip-esya-backend
 - `DB_URL` — MySQL JDBC URL
 - `DB_USERNAME` — DB user
 - `DB_PASSWORD` — DB password
+- `MAIL_USERNAME` — Gmail address for SMTP
+- `MAIL_PASSWORD` — Gmail App Password (2FA required)
 
 ## Güvenlik Katmanları
 
@@ -71,8 +73,10 @@ Request akışı: `RateLimitFilter → JwtAuthFilter → SecurityFilterChain →
 ## API Endpoints
 
 ### Public
-- `POST /api/auth/register` — Student registration
-- `POST /api/auth/login` — Login (returns access + refresh token)
+- `POST /api/auth/register` — Student registration (sends verification code)
+- `POST /api/auth/verify-email` — Verify email with 6-digit code
+- `POST /api/auth/resend-verification` — Resend verification code
+- `POST /api/auth/login` — Login (returns access + refresh token, requires verified email)
 - `POST /api/auth/refresh` — Token rotation
 - `POST /api/auth/forgot-password` — Password reset token
 - `POST /api/auth/reset-password` — Reset password with token

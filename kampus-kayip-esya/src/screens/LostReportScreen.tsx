@@ -23,6 +23,7 @@ import { useAuth } from '../context/AuthContext';
 import { lostReportsService } from '../services/lostReportsService';
 import { uploadService } from '../services/uploadService';
 import { FoundItemCategory } from '../types/foundItem';
+import { ImageWithFallback } from '../components/ImageWithFallback';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -172,9 +173,10 @@ export function LostReportScreen() {
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Kategori</Text>
-            <Pressable
+            <Pressable accessibilityRole="button"
               style={styles.selectBox}
               onPress={() => setShowCategories(!showCategories)}
+              accessibilityLabel="Kategori seçin"
             >
               <Text
                 style={[
@@ -194,7 +196,7 @@ export function LostReportScreen() {
             {showCategories ? (
               <View style={styles.categoryList}>
                 {categories.map(cat => (
-                  <Pressable
+                  <Pressable accessibilityRole="button"
                     key={cat.value}
                     style={[
                       styles.categoryItem,
@@ -204,6 +206,7 @@ export function LostReportScreen() {
                       setCategory(cat.value);
                       setShowCategories(false);
                     }}
+                    accessibilityLabel={`${cat.label} seç`}
                   >
                     <Text
                       style={[
@@ -257,20 +260,20 @@ export function LostReportScreen() {
 
           {imageUri ? (
             <View style={styles.imagePreviewContainer}>
-              <Image source={{ uri: imageUri }} style={styles.imagePreview} resizeMode="cover" />
+              <ImageWithFallback source={{ uri: imageUri }} style={styles.imagePreview} resizeMode="cover" />
               <View style={styles.imageActions}>
-                <Pressable style={styles.changePhotoButton} onPress={showImageOptions}>
+                <Pressable accessibilityRole="button" style={styles.changePhotoButton} onPress={showImageOptions} accessibilityLabel="Fotoğrafı değiştir">
                   <Ionicons name="camera-outline" size={16} color={colors.yeditepeBlue} />
                   <Text style={styles.changePhotoText}>Değiştir</Text>
                 </Pressable>
-                <Pressable style={styles.removePhotoButton} onPress={() => setImageUri(null)}>
+                <Pressable accessibilityRole="button" style={styles.removePhotoButton} onPress={() => setImageUri(null)} accessibilityLabel="Fotoğrafı kaldır">
                   <Ionicons name="trash-outline" size={16} color={colors.error} />
                   <Text style={styles.removePhotoText}>Kaldır</Text>
                 </Pressable>
               </View>
             </View>
           ) : (
-            <Pressable style={styles.photoButton} onPress={showImageOptions}>
+            <Pressable accessibilityRole="button" style={styles.photoButton} onPress={showImageOptions} accessibilityLabel="Fotoğraf ekle">
               <Ionicons
                 name="camera-outline"
                 size={20}
@@ -280,13 +283,15 @@ export function LostReportScreen() {
             </Pressable>
           )}
 
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={[
               styles.submitButton,
               isSubmitting && { opacity: 0.7 },
             ]}
             onPress={handleSubmit}
             disabled={isSubmitting}
+            accessibilityState={{ disabled: isSubmitting }}
+            accessibilityLabel="Bildirimi gönder"
           >
             {isSubmitting ? (
               <ActivityIndicator color={colors.white} />
@@ -343,7 +348,7 @@ const styles = StyleSheet.create({
   input: {
     minHeight: 50,
     borderWidth: 1,
-    borderColor: 'rgba(193, 198, 211, 0.85)',
+    borderColor: colors.borderLight85,
     borderRadius: 15,
     backgroundColor: colors.white,
     paddingHorizontal: 15,
@@ -360,7 +365,7 @@ const styles = StyleSheet.create({
   selectBox: {
     minHeight: 50,
     borderWidth: 1,
-    borderColor: 'rgba(193, 198, 211, 0.85)',
+    borderColor: colors.borderLight85,
     borderRadius: 15,
     backgroundColor: colors.white,
     paddingHorizontal: 15,
@@ -378,7 +383,7 @@ const styles = StyleSheet.create({
   categoryList: {
     marginTop: 8,
     borderWidth: 1,
-    borderColor: 'rgba(193, 198, 211, 0.85)',
+    borderColor: colors.borderLight85,
     borderRadius: 15,
     backgroundColor: colors.white,
     overflow: 'hidden',
@@ -388,11 +393,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(193, 198, 211, 0.3)',
+    borderBottomColor: colors.borderLight30,
   },
 
   categoryItemActive: {
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
   },
 
   categoryItemText: {
@@ -410,7 +415,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: 'hidden',
     borderWidth: 1,
-    borderColor: 'rgba(193, 198, 211, 0.5)',
+    borderColor: colors.borderLight50,
   },
 
   imagePreview: {
@@ -435,7 +440,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
   },
 
   changePhotoText: {
@@ -451,7 +456,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 20,
-    backgroundColor: 'rgba(211, 47, 47, 0.08)',
+    backgroundColor: colors.errorTint08,
   },
 
   removePhotoText: {

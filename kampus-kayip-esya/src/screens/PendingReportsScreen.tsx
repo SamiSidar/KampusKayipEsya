@@ -89,12 +89,16 @@ export function PendingReportsScreen() {
       <AppHeader title="Bekleyen Bildiriler" showBack showNotification={false} />
 
       <FlatList
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={5}
         data={reports}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item: report }) => (
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={styles.reportCard}
             onPress={() => goToReview(report.id)}
+            accessibilityLabel={`${report.title} bildiri incele`}
           >
             <View style={styles.iconPanel}>
               <MaterialCommunityIcons
@@ -146,9 +150,10 @@ export function PendingReportsScreen() {
               </View>
 
               <View style={styles.actionRow}>
-                <Pressable
+                <Pressable accessibilityRole="button"
                   style={styles.reviewButton}
                   onPress={() => goToReview(report.id)}
+                  accessibilityLabel={`${report.title} incele`}
                 >
                   <Ionicons
                     name="eye-outline"
@@ -245,13 +250,13 @@ const styles = StyleSheet.create({
     width: 72,
     height: 90,
     borderRadius: 18,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   verticalDivider: {
     width: 1,
-    backgroundColor: 'rgba(193, 198, 211, 0.45)',
+    backgroundColor: colors.borderLight45,
     marginHorizontal: 13,
     borderRadius: 1,
   },
@@ -276,9 +281,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     paddingHorizontal: 9,
-    paddingVertical: 6,
+    paddingVertical: 6, minHeight: 44,
     borderRadius: 14,
   },
   statusText: {
@@ -312,7 +317,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   reviewButton: {
-    minHeight: 38,
+    minHeight: 44,
     paddingHorizontal: 18,
     borderRadius: 19,
     backgroundColor: colors.yeditepeBlue,

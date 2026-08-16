@@ -29,6 +29,11 @@ public class FileStorageService {
             "image/jpeg", "image/png", "image/webp", "image/gif"
     );
 
+    /** İzin verilen dosya uzantıları (çift uzantı saldırılarını engeller) */
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of(
+            ".jpg", ".jpeg", ".png", ".webp", ".gif"
+    );
+
     public FileStorageService(
             @Value("${file.upload-dir}") String uploadDirStr,
             FileRecordRepository fileRecordRepository,
@@ -57,16 +62,26 @@ public class FileStorageService {
             throw new BadRequestException("Sadece JPEG, PNG, WebP ve GIF dosyaları yüklenebilir.");
         }
 
+        // Orijinal dosya adından uzantıyı al ve doğrula
         String originalFileName = file.getOriginalFilename();
         String extension = "";
         if (originalFileName != null && originalFileName.contains(".")) {
-            extension = originalFileName.substring(originalFileName.lastIndexOf("."));
+            extension = originalFileName.substring(originalFileName.lastIndexOf(".")).toLowerCase();
+        }
+
+        // Uzantı whitelist kontrolü (çift uzantı saldırısı: "foto.jsp.png" → ".png" OK)
+        if (!extension.isEmpty() && !ALLOWED_EXTENSIONS.contains(extension)) {
+            throw new BadRequestException("Geçersiz dosya uzantısı.");
         }
 
         String storedFileName = UUID.randomUUID().toString() + extension;
 
         try {
-            Path targetPath = this.uploadDir.resolve(storedFileName);
+            Path targetPath = this.uploadDir.resolve(storedFileName).normalize();
+            // Path traversal koruması — hedef uploadDir içinde olmalı
+            if (!targetPath.startsWith(this.uploadDir)) {
+                throw new BadRequestException("Geçersiz dosya yolu.");
+            }
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             throw new RuntimeException("Dosya kaydedilemedi.", e);
@@ -93,13 +108,31 @@ public class FileStorageService {
     }
 
     /**
-     * Dosyayı diskten okuyup byte[] döner (serve etmek için).
+     * Dosyayı diskten okuyup Path döner (serve etmek için).
+     * Path traversal koruması: sadece uploadDir içindeki dosyalara erişim izni verir.
      */
     public Path getFilePath(String fileName) {
-        Path filePath = this.uploadDir.resolve(fileName).normalize();
-        if (!Files.exists(filePath)) {
-            throw new BadRequestException("Dosya bulunamadı: " + fileName);
+        // Null / boş kontrol
+        if (fileName == null || fileName.isBlank()) {
+            throw new BadRequestException("Dosya adı boş olamaz.");
         }
+
+        // ".." veya "/" içeren dosya adlarını doğrudan reddet
+        if (fileName.contains("..") || fileName.contains("/") || fileName.contains("\\")) {
+            throw new BadRequestException("Geçersiz dosya adı.");
+        }
+
+        Path filePath = this.uploadDir.resolve(fileName).normalize();
+
+        // Son savunma hattı — resolve+normalize sonrası uploadDir dışına çıkamaz
+        if (!filePath.startsWith(this.uploadDir)) {
+            throw new BadRequestException("Geçersiz dosya yolu.");
+        }
+
+        if (!Files.exists(filePath)) {
+            throw new BadRequestException("Dosya bulunamadı.");
+        }
+
         return filePath;
     }
 }

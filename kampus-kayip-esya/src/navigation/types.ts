@@ -2,7 +2,11 @@ export type RootStackParamList = {
   Splash: undefined;
   Login: undefined;
   Register: undefined;
+  EmailVerification: {
+    email: string;
+  };
   ForgotPassword: undefined;
+  PersonalInfo: undefined;
 
   StudentHome: undefined;
   Listings: undefined;
@@ -51,4 +55,3 @@ export type RootStackParamList = {
     deliveryId: number;
   };
 };
-``

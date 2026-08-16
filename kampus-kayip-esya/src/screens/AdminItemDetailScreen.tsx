@@ -7,6 +7,7 @@ import {
   Image,
   Pressable,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -24,6 +25,7 @@ import {
   getFoundItemStatusLabel,
 } from '../types/foundItem';
 import { ClaimRequest, getClaimRequestStatusLabel } from '../types/claimRequest';
+import { ImageWithFallback } from '../components/ImageWithFallback';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type AdminItemDetailRouteProp = RouteProp<RootStackParamList, 'AdminItemDetail'>;
@@ -95,7 +97,7 @@ export function AdminItemDetailScreen() {
       >
         {item.imageUrl ? (
           <View style={styles.imageCard}>
-            <Image
+            <ImageWithFallback
               source={{ uri: item.imageUrl }}
               style={styles.itemImage}
               resizeMode="cover"
@@ -191,7 +193,7 @@ export function AdminItemDetailScreen() {
                 const isApproved = claim.status === 'APPROVED' || claim.status === 'COMPLETED';
 
                 return (
-                  <Pressable
+                  <Pressable accessibilityRole="button"
                     key={claim.id}
                     style={styles.claimCard}
                     onPress={() =>
@@ -199,6 +201,7 @@ export function AdminItemDetailScreen() {
                         claimId: claim.id,
                       })
                     }
+                    accessibilityLabel={`${claim.student?.fullName || 'Bilinmiyor'} talep detayı`}
                   >
                     <View style={styles.claimHeader}>
                       <View style={styles.claimPersonRow}>
@@ -282,9 +285,16 @@ export function AdminItemDetailScreen() {
           </Text>
 
           <View style={styles.buttonGroup}>
-            <Pressable
+            <Pressable accessibilityRole="button"
               style={styles.editButton}
-              onPress={() => navigation.navigate('FoundItemCreate')}
+              onPress={() =>
+                Alert.alert(
+                  'Düzenle',
+                  'Eşya düzenleme özelliği yakında eklenecektir.',
+                  [{ text: 'Tamam' }]
+                )
+              }
+              accessibilityLabel="Eşyayı düzenle"
             >
               <Ionicons
                 name="create-outline"
@@ -294,7 +304,25 @@ export function AdminItemDetailScreen() {
               <Text style={styles.editButtonText}>Düzenle</Text>
             </Pressable>
 
-            <Pressable style={styles.closeButton}>
+            <Pressable accessibilityRole="button"
+              style={styles.closeButton}
+              accessibilityLabel="Eşyayı arşivle"
+              onPress={() =>
+                Alert.alert(
+                  'Arşivle',
+                  'Bu eşyayı arşivlemek istediğinize emin misiniz?',
+                  [
+                    { text: 'İptal', style: 'cancel' },
+                    {
+                      text: 'Arşivle',
+                      style: 'destructive',
+                      onPress: () =>
+                        Alert.alert('Bilgi', 'Arşivleme özelliği yakında eklenecektir.'),
+                    },
+                  ]
+                )
+              }
+            >
               <Ionicons name="archive-outline" size={19} color={colors.white} />
               <Text style={styles.primaryButtonText}>Kapat / Arşivle</Text>
             </Pressable>
@@ -365,9 +393,9 @@ const styles = StyleSheet.create({
     height: 220,
     borderRadius: 18,
     overflow: 'hidden',
-    backgroundColor: '#E7E8F0',
+    backgroundColor: colors.surfaceMuted,
     borderWidth: 1,
-    borderColor: '#E1E4ED',
+    borderColor: colors.surfaceDivider,
     shadowColor: colors.black,
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -425,13 +453,13 @@ const styles = StyleSheet.create({
   },
   infoList: { gap: 11 },
   infoRow: {
-    minHeight: 34,
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 14,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(193, 198, 211, 0.22)',
+    borderTopColor: colors.borderLight22,
     paddingTop: 10,
   },
   infoRowTop: { alignItems: 'flex-start' },
@@ -456,7 +484,7 @@ const styles = StyleSheet.create({
   },
   infoValueMultiline: { fontWeight: '600' },
   statusPill: {
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 10,
@@ -467,14 +495,14 @@ const styles = StyleSheet.create({
     color: colors.yeditepeBlue,
   },
   storageCard: {
-    backgroundColor: 'rgba(34, 113, 196, 0.08)',
+    backgroundColor: colors.blueTint08,
     borderRadius: 16,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: 'rgba(34, 113, 196, 0.14)',
+    borderColor: colors.blueTint14,
   },
   storageIcon: {
     width: 52,
@@ -499,11 +527,11 @@ const styles = StyleSheet.create({
   },
   claimList: { gap: 12 },
   claimCard: {
-    backgroundColor: 'rgba(34, 113, 196, 0.05)',
+    backgroundColor: colors.blueTint05,
     borderRadius: 16,
     padding: 14,
     borderWidth: 1,
-    borderColor: 'rgba(34, 113, 196, 0.12)',
+    borderColor: colors.blueTint12,
   },
   claimHeader: {
     flexDirection: 'row',
@@ -526,13 +554,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 5,
     borderRadius: 12,
-    backgroundColor: 'rgba(193, 198, 211, 0.25)',
+    backgroundColor: colors.borderLight25,
   },
   claimStatusPending: {
-    backgroundColor: 'rgba(217, 119, 6, 0.12)',
+    backgroundColor: colors.warningTint12,
   },
   claimStatusApproved: {
-    backgroundColor: 'rgba(46, 125, 50, 0.12)',
+    backgroundColor: colors.successTint12,
   },
   claimStatusText: {
     fontSize: 10.5,
@@ -565,7 +593,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(193, 198, 211, 0.25)',
+    borderTopColor: colors.borderLight25,
   },
   claimDate: {
     fontSize: 11.5,
@@ -592,9 +620,9 @@ const styles = StyleSheet.create({
   editButton: {
     minHeight: 46,
     borderRadius: 23,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     borderWidth: 1,
-    borderColor: 'rgba(34, 113, 196, 0.22)',
+    borderColor: colors.blueTint22,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',

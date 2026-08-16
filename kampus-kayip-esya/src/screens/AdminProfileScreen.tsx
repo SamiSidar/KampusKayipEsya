@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   Pressable,
+  Alert,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { CommonActions, useNavigation } from '@react-navigation/native';
@@ -13,46 +14,86 @@ import { colors } from '../theme/colors';
 import { AppHeader } from '../components/AppHeader';
 import { AdminBottomBar } from '../components/AdminBottomBar';
 import { RootStackParamList } from '../navigation/types';
+import { useAuth } from '../context/AuthContext';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-const menuItems = [
+type MenuItem = {
+  id: string;
+  title: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  danger: boolean;
+  action: 'personalInfo' | 'notifications' | 'help' | 'logout';
+};
+
+const menuItems: MenuItem[] = [
   {
     id: '1',
     title: 'Kişisel Bilgiler',
-    icon: 'person-outline' as keyof typeof Ionicons.glyphMap,
+    icon: 'person-outline',
     danger: false,
+    action: 'personalInfo',
   },
   {
     id: '2',
     title: 'Bildirim Ayarları',
-    icon: 'notifications-outline' as keyof typeof Ionicons.glyphMap,
+    icon: 'notifications-outline',
     danger: false,
+    action: 'notifications',
   },
   {
     id: '3',
     title: 'Yardım',
-    icon: 'help-circle-outline' as keyof typeof Ionicons.glyphMap,
+    icon: 'help-circle-outline',
     danger: false,
+    action: 'help',
   },
   {
     id: '4',
     title: 'Çıkış Yap',
-    icon: 'log-out-outline' as keyof typeof Ionicons.glyphMap,
+    icon: 'log-out-outline',
     danger: true,
+    action: 'logout',
   },
 ];
 
 export function AdminProfileScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const { user, logout } = useAuth();
 
-  function handleLogout() {
+  async function handleLogout() {
+    await logout();
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
         routes: [{ name: 'Login' }],
       })
     );
+  }
+
+  function handleMenuPress(action: MenuItem['action']) {
+    switch (action) {
+      case 'personalInfo':
+        navigation.navigate('PersonalInfo');
+        break;
+      case 'notifications':
+        Alert.alert(
+          'Bildirim Ayarları',
+          'Bildirim ayarları yakında eklenecektir.',
+          [{ text: 'Tamam' }]
+        );
+        break;
+      case 'help':
+        Alert.alert(
+          'Yardım',
+          'Kampüs Kayıp Eşya Uygulaması\nYeditepe Üniversitesi\n\nSorun veya önerileriniz için:\nkampuskayipesya@yeditepe.edu.tr',
+          [{ text: 'Tamam' }]
+        );
+        break;
+      case 'logout':
+        handleLogout();
+        break;
+    }
   }
 
   return (
@@ -75,8 +116,8 @@ export function AdminProfileScreen() {
             />
           </View>
 
-          <Text style={styles.name}>Güvenlik Personeli</Text>
-          <Text style={styles.email}>guvenlik@yeditepe.edu.tr</Text>
+          <Text style={styles.name}>{user?.fullName ?? 'Yönetici'}</Text>
+          <Text style={styles.email}>{user?.email ?? ''}</Text>
 
           <View style={styles.roleBadge}>
             <MaterialCommunityIcons
@@ -93,10 +134,11 @@ export function AdminProfileScreen() {
             const isLast = index === menuItems.length - 1;
 
             return (
-              <Pressable
+              <Pressable accessibilityRole="button"
                 key={item.id}
                 style={[styles.menuItem, !isLast && styles.menuDivider]}
-                onPress={item.danger ? handleLogout : undefined}
+                onPress={() => handleMenuPress(item.action)}
+                accessibilityLabel={item.title}
               >
                 <View
                   style={[
@@ -125,7 +167,7 @@ export function AdminProfileScreen() {
                   size={21}
                   color={
                     item.danger
-                      ? 'rgba(211, 47, 47, 0.50)'
+                      ? colors.errorTint50
                       : colors.textSecondary
                   }
                 />
@@ -189,7 +231,7 @@ const styles = StyleSheet.create({
     width: 92,
     height: 92,
     borderRadius: 46,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     borderWidth: 3,
     borderColor: colors.white,
     alignItems: 'center',
@@ -224,7 +266,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -261,21 +303,21 @@ const styles = StyleSheet.create({
 
   menuDivider: {
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(193, 198, 211, 0.45)',
+    borderBottomColor: colors.borderLight45,
   },
 
   menuIconCircle: {
     width: 42,
-    height: 42,
+    minHeight: 44,
     borderRadius: 21,
-    backgroundColor: '#F2F3FB',
+    backgroundColor: colors.surfaceLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 13,
   },
 
   menuIconCircleDanger: {
-    backgroundColor: 'rgba(211, 47, 47, 0.10)',
+    backgroundColor: colors.errorTint10,
   },
 
   menuText: {

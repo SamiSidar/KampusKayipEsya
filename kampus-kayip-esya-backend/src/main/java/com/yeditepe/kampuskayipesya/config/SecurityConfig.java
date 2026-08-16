@@ -74,6 +74,7 @@ public class SecurityConfig {
                         // ══════════ PUBLIC ══════════
                         .requestMatchers("/api/auth/register", "/api/auth/login",
                                 "/api/auth/refresh",
+                                "/api/auth/verify-email", "/api/auth/resend-verification",
                                 "/api/auth/forgot-password", "/api/auth/reset-password").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/found-items", "/api/found-items/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/uploads/**").permitAll()
@@ -115,6 +116,10 @@ public class SecurityConfig {
                         .frameOptions(frame -> frame.deny())
                         // Cache kontrolü — hassas veriler cache'lenmez
                         .cacheControl(cache -> {})
+                        // HSTS — tarayıcıyı HTTPS kullanmaya zorlar (1 yıl)
+                        .httpStrictTransportSecurity(hsts -> hsts
+                                .includeSubDomains(true)
+                                .maxAgeInSeconds(31536000))
                 );
 
         return http.build();
@@ -128,13 +133,23 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
+        // Production domain (ortam değişkeninden alınır)
+        String productionOrigin = System.getenv("CORS_ALLOWED_ORIGIN");
+
         // Geliştirme ortamı — bilinen portlar
-        config.setAllowedOrigins(List.of(
+        java.util.List<String> origins = new java.util.ArrayList<>(List.of(
                 "http://localhost:8081",
                 "http://localhost:19006",
                 "http://localhost:19000",
                 "http://localhost:3000"
         ));
+
+        // Production domain varsa ekle
+        if (productionOrigin != null && !productionOrigin.isBlank()) {
+            origins.add(productionOrigin);
+        }
+
+        config.setAllowedOrigins(origins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
         config.setExposedHeaders(List.of("Authorization"));

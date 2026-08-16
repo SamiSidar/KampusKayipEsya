@@ -7,22 +7,43 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yeditepe.kampuskayipesya",
+      "buildNumber": "1",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Kayıp veya bulunan eşya fotoğrafı çekmek için kamera erişimi gereklidir.",
+        "NSPhotoLibraryUsageDescription": "Kayıp veya bulunan eşya fotoğrafı seçmek için galeri erişimi gereklidir."
+      }
     },
     "android": {
+      "package": "com.yeditepe.kampuskayipesya",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "permissions": [
+        "CAMERA",
+        "READ_MEDIA_IMAGES"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-secure-store"
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Kayıp veya bulunan eşya fotoğrafı çekmek için kamera erişimi gereklidir.",
+          "photosPermission": "Kayıp veya bulunan eşya fotoğrafı seçmek için galeri erişimi gereklidir."
+        }
+      ],
+      "expo-secure-store",
+      "./plugins/withNetworkSecurity",
+      "./plugins/withATSSecurity"
     ]
   }
 }

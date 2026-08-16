@@ -153,10 +153,12 @@ export function LoginScreen() {
           </View>
 
           {/* Giriş butonu */}
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
             onPress={handleLogin}
             disabled={isLoading}
+            accessibilityState={{ disabled: isLoading }}
+            accessibilityLabel="Giriş yap"
           >
             {isLoading ? (
               <ActivityIndicator color={colors.white} size="small" />
@@ -168,8 +170,13 @@ export function LoginScreen() {
             )}
           </Pressable>
 
+          {/* Şifremi unuttum */}
+          <Pressable accessibilityRole="button" style={styles.forgotLink} onPress={() => navigation.navigate('ForgotPassword')} accessibilityLabel="Şifremi unuttum">
+            <Text style={styles.forgotLinkText}>Şifremi Unuttum</Text>
+          </Pressable>
+
           {/* Kayıt ol linki */}
-          <Pressable style={styles.registerLink} onPress={() => navigation.navigate('Register')}>
+          <Pressable accessibilityRole="button" style={styles.registerLink} onPress={() => navigation.navigate('Register')} accessibilityLabel="Kayıt ol sayfasına git">
             <Text style={styles.registerLinkText}>
               Hesabınız yok mu? <Text style={styles.registerLinkBold}>Kayıt Ol</Text>
             </Text>
@@ -252,7 +259,7 @@ const styles = StyleSheet.create({
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEE2E2',
+    backgroundColor: colors.errorLight,
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
@@ -279,7 +286,7 @@ const styles = StyleSheet.create({
   inputWrapper: {
     minHeight: 52,
     borderWidth: 1,
-    borderColor: 'rgba(193, 198, 211, 0.85)',
+    borderColor: colors.borderLight85,
     borderRadius: 16,
     backgroundColor: colors.white,
     flexDirection: 'row',
@@ -323,6 +330,17 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 15.5,
     fontWeight: '800',
+  },
+
+  forgotLink: {
+    marginTop: 14,
+    alignItems: 'center' as const,
+  },
+
+  forgotLinkText: {
+    fontSize: 13.5,
+    fontWeight: '700' as const,
+    color: colors.yeditepeBlue,
   },
 
   registerLink: {

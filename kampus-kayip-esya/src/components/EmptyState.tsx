@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
     width: 92,
     height: 92,
     borderRadius: 46,
-    backgroundColor: '#F0F2F7',
+    backgroundColor: colors.surfaceHover,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 18,
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: '800',
-    color: '#9AA1AF',
+    color: colors.textTertiary,
     textAlign: 'center',
     marginBottom: 8,
   },

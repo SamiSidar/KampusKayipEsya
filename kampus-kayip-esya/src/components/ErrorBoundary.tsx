@@ -1,5 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { colors } from '../theme/colors';
+import { captureException } from '../services/crashReporting';
 
 type Props = {
   children: ReactNode;
@@ -22,8 +24,9 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Production'da buraya Sentry.captureException(error) eklenir
-    console.error('ErrorBoundary caught:', error, errorInfo);
+    captureException(error, {
+      componentStack: errorInfo.componentStack,
+    });
   }
 
   handleReset = () => {
@@ -39,7 +42,12 @@ export class ErrorBoundary extends Component<Props, State> {
           <Text style={styles.message}>
             Beklenmeyen bir hata meydana geldi. Lütfen tekrar deneyin.
           </Text>
-          <TouchableOpacity style={styles.button} onPress={this.handleReset}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={this.handleReset}
+            accessibilityRole="button"
+            accessibilityLabel="Tekrar dene"
+          >
             <Text style={styles.buttonText}>Tekrar Dene</Text>
           </TouchableOpacity>
         </View>
@@ -56,7 +64,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
   },
   emoji: {
     fontSize: 48,
@@ -65,24 +73,25 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#1a1a1a',
+    color: colors.textDark,
     marginBottom: 8,
   },
   message: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textMuted,
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 20,
   },
   button: {
-    backgroundColor: '#2563EB',
+    backgroundColor: colors.info,
     paddingHorizontal: 24,
     paddingVertical: 12,
+    minHeight: 44,
     borderRadius: 8,
   },
   buttonText: {
-    color: '#fff',
+    color: colors.white,
     fontSize: 14,
     fontWeight: '600',
   },

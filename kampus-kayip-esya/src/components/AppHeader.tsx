@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
 import { RootStackParamList } from '../navigation/types';
+import { useAuth } from '../context/AuthContext';
+import { notificationsService } from '../services/notificationsService';
 
 type AppHeaderProps = {
   title: string;
@@ -20,6 +22,33 @@ export function AppHeader({
   showNotification = true,
 }: AppHeaderProps) {
   const navigation = useNavigation<NavigationProp>();
+  const { token } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!showNotification || !token) return;
+
+    let mounted = true;
+
+    async function fetchUnreadCount() {
+      try {
+        const count = await notificationsService.getUnreadCount(token);
+        if (mounted) setUnreadCount(count);
+      } catch {
+        // Sessiz hata — header render'ı engellenmemeli
+      }
+    }
+
+    fetchUnreadCount();
+
+    // Her 30 saniyede bir güncelle
+    const interval = setInterval(fetchUnreadCount, 30000);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [showNotification, token]);
 
   function handleBackPress() {
     if (navigation.canGoBack()) {
@@ -27,11 +56,15 @@ export function AppHeader({
     }
   }
 
+  function handleNotificationPress() {
+    navigation.navigate('Notifications');
+  }
+
   return (
     <View style={styles.header}>
       <View style={styles.side}>
         {showBack ? (
-          <Pressable style={styles.iconButton} onPress={handleBackPress}>
+          <Pressable accessibilityRole="button" style={styles.iconButton} onPress={handleBackPress} accessibilityLabel="Geri dön">
             <Ionicons name="chevron-back" size={27} color={colors.white} />
           </Pressable>
         ) : null}
@@ -43,13 +76,23 @@ export function AppHeader({
 
       <View style={styles.side}>
         {showNotification ? (
-          <Pressable style={styles.rightIconButton}>
+          <Pressable accessibilityRole="button"
+            style={styles.rightIconButton}
+            onPress={handleNotificationPress}
+            accessibilityLabel="Bildirimler"
+          >
             <Ionicons
               name="notifications-outline"
               size={22}
               color={colors.white}
             />
-            <View style={styles.notificationDot} />
+            {unreadCount > 0 ? (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Text>
+              </View>
+            ) : null}
           </Pressable>
         ) : null}
       </View>
@@ -83,7 +126,7 @@ const styles = StyleSheet.create({
 
   iconButton: {
     width: 40,
-    height: 40,
+    minHeight: 44,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -91,11 +134,11 @@ const styles = StyleSheet.create({
 
   rightIconButton: {
     width: 38,
-    height: 38,
+    minHeight: 44,
     borderRadius: 19,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: colors.whiteAlpha12,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.20)',
+    borderColor: colors.whiteAlpha20,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -109,15 +152,24 @@ const styles = StyleSheet.create({
     letterSpacing: 0.1,
   },
 
-  notificationDot: {
+  notificationBadge: {
     position: 'absolute',
-    right: 8,
-    top: 8,
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
+    right: 4,
+    top: 4,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: colors.error,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.yeditepeBlue,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+  },
+
+  notificationBadgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: colors.white,
   },
 });

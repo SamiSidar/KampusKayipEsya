@@ -14,10 +14,12 @@ import com.yeditepe.kampuskayipesya.repository.RefreshTokenRepository;
 import com.yeditepe.kampuskayipesya.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -45,22 +47,30 @@ public class AuthService {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final DtoMapper dtoMapper;
+    private final EmailService emailService;
 
     /** Reset token geçerlilik süresi (dakika) */
     private static final int RESET_TOKEN_EXPIRY_MINUTES = 15;
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    @Value("${app.verification-code-expiry-minutes:10}")
+    private int verificationCodeExpiryMinutes;
 
     public AuthService(UserRepository userRepository,
                        PasswordResetTokenRepository resetTokenRepository,
                        RefreshTokenRepository refreshTokenRepository,
                        JwtService jwtService,
                        PasswordEncoder passwordEncoder,
-                       DtoMapper dtoMapper) {
+                       DtoMapper dtoMapper,
+                       EmailService emailService) {
         this.userRepository = userRepository;
         this.resetTokenRepository = resetTokenRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
         this.dtoMapper = dtoMapper;
+        this.emailService = emailService;
     }
 
     /** İzin verilen email domainleri */
@@ -75,8 +85,10 @@ public class AuthService {
      * - Email @std.yeditepe.edu.tr veya @yeditepe.edu.tr olmalı
      * - Username email'den otomatik oluşturulur
      * - Ad ve soyad email'deki isimle uyumlu olmalı
+     * - Doğrulama kodu üretir ve email gönderir
+     * - Token DÖNMEZ — önce email doğrulanmalı
      */
-    public AuthResponse register(RegisterRequest request) {
+    public void register(RegisterRequest request) {
         // Email domain kontrolü
         String email = request.getEmail().trim().toLowerCase();
         boolean validDomain = ALLOWED_DOMAINS.stream().anyMatch(email::endsWith);
@@ -131,7 +143,10 @@ public class AuthService {
         // fullName = firstName + lastName
         String fullName = request.getFirstName().trim() + " " + request.getLastName().trim();
 
-        // Yeni kullanıcı oluştur — her zaman STUDENT
+        // Doğrulama kodu üret
+        String verificationCode = generateVerificationCode();
+
+        // Yeni kullanıcı oluştur — her zaman STUDENT, emailVerified=false
         User user = new User();
         user.setUsername(username);
         user.setFullName(fullName);
@@ -141,13 +156,16 @@ public class AuthService {
         user.setStudentNumber(request.getStudentNumber());
         user.setPhoneNumber(request.getPhoneNumber());
         user.setDepartment(request.getDepartment());
+        user.setEmailVerified(false);
+        user.setVerificationCode(verificationCode);
+        user.setVerificationCodeExpiry(LocalDateTime.now().plusMinutes(verificationCodeExpiryMinutes));
 
-        User savedUser = userRepository.save(user);
+        userRepository.save(user);
 
-        // Access + refresh token üret
-        String accessToken = jwtService.generateAccessToken(savedUser);
-        String refreshTokenValue = createRefreshToken(savedUser);
-        return new AuthResponse(accessToken, refreshTokenValue, dtoMapper.toUserResponse(savedUser));
+        // Doğrulama emaili gönder
+        emailService.sendVerificationEmail(email, verificationCode);
+
+        log.info("Yeni kullanıcı kaydedildi, doğrulama kodu gönderildi: {}", email);
     }
 
     /**
@@ -204,6 +222,7 @@ public class AuthService {
     /**
      * Email ve şifre ile giriş yapar.
      * Başarılıysa JWT token + kullanıcı bilgisi döner.
+     * Email doğrulanmamışsa giriş engellenir.
      */
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
@@ -211,6 +230,10 @@ public class AuthService {
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new UnauthorizedException("Email veya şifre hatalı");
+        }
+
+        if (!user.isEmailVerified()) {
+            throw new BadRequestException("Email adresiniz henüz doğrulanmamış. Lütfen email'inize gelen doğrulama kodunu girin.");
         }
 
         String accessToken = jwtService.generateAccessToken(user);
@@ -418,6 +441,75 @@ public class AuthService {
     public void logout(Long userId) {
         refreshTokenRepository.deleteByUserId(userId);
         log.info("Kullanıcı çıkış yaptı: userId={}", userId);
+    }
+
+    // ══════════════════════════════════════════════════════════
+    // EMAIL DOĞRULAMA
+    // ══════════════════════════════════════════════════════════
+
+    /**
+     * Email doğrulama kodunu kontrol eder.
+     * Kod doğruysa ve süresi dolmamışsa emailVerified=true yapılır.
+     */
+    @Transactional
+    public void verifyEmail(String email, String code) {
+        User user = userRepository.findByEmail(email.trim().toLowerCase())
+                .orElseThrow(() -> new BadRequestException("Kullanıcı bulunamadı"));
+
+        if (user.isEmailVerified()) {
+            throw new BadRequestException("Email zaten doğrulanmış");
+        }
+
+        if (user.getVerificationCode() == null) {
+            throw new BadRequestException("Doğrulama kodu bulunamadı. Lütfen yeni kod talep edin.");
+        }
+
+        if (user.getVerificationCodeExpiry() != null
+                && user.getVerificationCodeExpiry().isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Doğrulama kodunun süresi dolmuş. Lütfen yeni kod talep edin.");
+        }
+
+        if (!user.getVerificationCode().equals(code.trim())) {
+            throw new BadRequestException("Doğrulama kodu hatalı");
+        }
+
+        user.setEmailVerified(true);
+        user.setVerificationCode(null);
+        user.setVerificationCodeExpiry(null);
+        userRepository.save(user);
+
+        log.info("Email doğrulandı: {}", email);
+    }
+
+    /**
+     * Yeni doğrulama kodu üretir ve email gönderir.
+     * Zaten doğrulanmış kullanıcılar için hata fırlatır.
+     */
+    @Transactional
+    public void resendVerificationCode(String email) {
+        User user = userRepository.findByEmail(email.trim().toLowerCase())
+                .orElseThrow(() -> new BadRequestException("Kullanıcı bulunamadı"));
+
+        if (user.isEmailVerified()) {
+            throw new BadRequestException("Email zaten doğrulanmış");
+        }
+
+        String newCode = generateVerificationCode();
+        user.setVerificationCode(newCode);
+        user.setVerificationCodeExpiry(LocalDateTime.now().plusMinutes(verificationCodeExpiryMinutes));
+        userRepository.save(user);
+
+        emailService.sendVerificationEmail(email, newCode);
+
+        log.info("Yeni doğrulama kodu gönderildi: {}", email);
+    }
+
+    /**
+     * 6 haneli rastgele doğrulama kodu üretir.
+     */
+    private String generateVerificationCode() {
+        int code = 100000 + SECURE_RANDOM.nextInt(900000);
+        return String.valueOf(code);
     }
 
     /**

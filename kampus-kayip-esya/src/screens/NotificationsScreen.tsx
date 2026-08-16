@@ -25,7 +25,7 @@ function getNotificationVisual(type: NotificationType) {
     return {
       icon: 'checkmark-circle-outline' as keyof typeof Ionicons.glyphMap,
       iconColor: colors.success,
-      background: 'rgba(46, 125, 50, 0.10)',
+      background: colors.successTint10,
       material: false,
     };
   }
@@ -34,7 +34,7 @@ function getNotificationVisual(type: NotificationType) {
     return {
       icon: 'archive-search-outline' as keyof typeof MaterialCommunityIcons.glyphMap,
       iconColor: colors.yeditepeBlue,
-      background: 'rgba(34, 113, 196, 0.10)',
+      background: colors.blueTint10,
       material: true,
     };
   }
@@ -43,7 +43,7 @@ function getNotificationVisual(type: NotificationType) {
     return {
       icon: 'cube-send' as keyof typeof MaterialCommunityIcons.glyphMap,
       iconColor: colors.yeditepeBlue,
-      background: 'rgba(34, 113, 196, 0.10)',
+      background: colors.blueTint10,
       material: true,
     };
   }
@@ -51,7 +51,7 @@ function getNotificationVisual(type: NotificationType) {
   return {
     icon: 'information-circle-outline' as keyof typeof Ionicons.glyphMap,
     iconColor: colors.textSecondary,
-    background: '#F2F3FB',
+    background: colors.surfaceLight,
     material: false,
   };
 }
@@ -108,6 +108,9 @@ export function NotificationsScreen() {
       <AppHeader title="Bildirimler" showBack showNotification={false} />
 
       <FlatList
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={5}
         data={notifications}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item: notification }) => {
@@ -115,12 +118,13 @@ export function NotificationsScreen() {
           const unread = !notification.read;
 
           return (
-            <Pressable
+            <Pressable accessibilityRole="button"
               style={[
                 styles.notificationCard,
                 unread && styles.unreadCard,
               ]}
               onPress={() => handleNotificationPress(notification)}
+              accessibilityLabel={`${notification.title}${unread ? ', okunmamış' : ''}`}
             >
               {unread ? <View style={styles.leftAccent} /> : null}
 
@@ -268,7 +272,7 @@ const styles = StyleSheet.create({
 
   unreadCard: {
     borderWidth: 1,
-    borderColor: 'rgba(34, 113, 196, 0.18)',
+    borderColor: colors.blueTint18,
     shadowColor: colors.yeditepeBlue,
     shadowOpacity: 0.08,
   },

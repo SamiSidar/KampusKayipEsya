@@ -85,7 +85,7 @@ export function RegisterScreen() {
         studentNumber: studentNumber.trim(),
       });
 
-      navigation.replace('Splash');
+      navigation.replace('EmailVerification', { email: email.trim().toLowerCase() });
     } catch (error: any) {
       setErrorMessage(error.message || 'Kayıt başarısız. Lütfen tekrar deneyin.');
     } finally {
@@ -96,7 +96,7 @@ export function RegisterScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable style={styles.headerSide} onPress={() => navigation.goBack()}>
+        <Pressable accessibilityRole="button" style={styles.headerSide} onPress={() => navigation.goBack()} accessibilityLabel="Geri dön">
           <Ionicons name="arrow-back" size={24} color={colors.white} />
         </Pressable>
         <Text style={styles.headerTitle}>Kayıt Ol</Text>
@@ -231,10 +231,12 @@ export function RegisterScreen() {
             </View>
 
             {/* Kayıt Ol butonu */}
-            <Pressable
+            <Pressable accessibilityRole="button"
               style={[styles.registerButton, isLoading && styles.buttonDisabled]}
               onPress={handleRegister}
               disabled={isLoading}
+              accessibilityState={{ disabled: isLoading }}
+              accessibilityLabel="Kayıt ol"
             >
               {isLoading ? (
                 <ActivityIndicator color={colors.white} size="small" />
@@ -247,7 +249,7 @@ export function RegisterScreen() {
             </Pressable>
 
             {/* Giriş yap linki */}
-            <Pressable style={styles.loginLink} onPress={() => navigation.navigate('Login')}>
+            <Pressable accessibilityRole="button" style={styles.loginLink} onPress={() => navigation.navigate('Login')} accessibilityLabel="Giriş yap sayfasına git">
               <Text style={styles.loginLinkText}>
                 Zaten hesabınız var mı? <Text style={styles.loginLinkBold}>Giriş Yap</Text>
               </Text>
@@ -325,7 +327,7 @@ const styles = StyleSheet.create({
   errorBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FEE2E2',
+    backgroundColor: colors.errorLight,
     borderRadius: 12,
     padding: 12,
     marginBottom: 16,
@@ -348,7 +350,7 @@ const styles = StyleSheet.create({
   inputWrapper: {
     minHeight: 52,
     borderWidth: 1,
-    borderColor: 'rgba(193, 198, 211, 0.85)',
+    borderColor: colors.borderLight85,
     borderRadius: 16,
     backgroundColor: colors.white,
     flexDirection: 'row',

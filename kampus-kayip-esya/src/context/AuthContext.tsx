@@ -141,10 +141,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function register(request: RegisterRequest): Promise<void> {
-    const response: LoginResponse = await authService.register(request);
-    setToken(response.token);
-    setUser(response.user);
-    await saveTokens(response.token, response.refreshToken, response.user);
+    // Kayıt sonrası token dönmez — email doğrulaması gerekli
+    await authService.register(request);
   }
 
   async function logout(): Promise<void> {

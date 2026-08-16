@@ -241,28 +241,34 @@ export function AdminClaimRequestDetailScreen() {
         <Text style={styles.footerTitle}>Admin İşlemleri</Text>
 
         <View style={styles.buttonGroup}>
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={[styles.approveButton, isProcessing && styles.disabledButton]}
             onPress={handleApprove}
             disabled={isProcessing}
+            accessibilityState={{ disabled: isProcessing }}
+            accessibilityLabel="Talebi onayla"
           >
             <Ionicons name="checkmark-circle-outline" size={18} color={colors.white} />
             <Text style={styles.primaryButtonText}>Talebi Onayla</Text>
           </Pressable>
 
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={[styles.revisionButton, isProcessing && styles.disabledButton]}
             onPress={handleRequestInfo}
             disabled={isProcessing}
+            accessibilityState={{ disabled: isProcessing }}
+            accessibilityLabel="Ek bilgi iste"
           >
             <Ionicons name="create-outline" size={18} color={colors.white} />
             <Text style={styles.primaryButtonText}>Ek Bilgi İste</Text>
           </Pressable>
 
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={[styles.rejectButton, isProcessing && styles.disabledButton]}
             onPress={handleReject}
             disabled={isProcessing}
+            accessibilityState={{ disabled: isProcessing }}
+            accessibilityLabel="Talebi reddet"
           >
             <Ionicons name="close-circle-outline" size={18} color={colors.white} />
             <Text style={styles.primaryButtonText}>Talebi Reddet</Text>
@@ -305,11 +311,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     shadowColor: colors.black, shadowOpacity: 0.06, shadowRadius: 12,
     shadowOffset: { width: 0, height: 5 }, elevation: 4,
-    borderWidth: 1, borderColor: 'rgba(34, 113, 196, 0.18)',
+    borderWidth: 1, borderColor: colors.blueTint18,
   },
   statusIconBox: {
     width: 62, height: 62, borderRadius: 31,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     alignItems: 'center', justifyContent: 'center', marginRight: 14,
   },
   statusTextBlock: { flex: 1 },
@@ -322,9 +328,9 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontSize: 17, fontWeight: '800', color: colors.yeditepeBlue, marginBottom: 14 },
   itemSummaryCard: {
-    backgroundColor: 'rgba(34, 113, 196, 0.08)', borderRadius: 18, padding: 14,
+    backgroundColor: colors.blueTint08, borderRadius: 18, padding: 14,
     flexDirection: 'row', alignItems: 'center', marginBottom: 14,
-    borderWidth: 1, borderColor: 'rgba(34, 113, 196, 0.14)',
+    borderWidth: 1, borderColor: colors.blueTint14,
   },
   itemIconBox: {
     width: 56, height: 56, borderRadius: 16, backgroundColor: colors.white,
@@ -335,14 +341,14 @@ const styles = StyleSheet.create({
   itemMeta: { fontSize: 12.5, color: colors.textSecondary, marginBottom: 8 },
   itemStatusBadge: {
     alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)', paddingHorizontal: 9,
-    paddingVertical: 5, borderRadius: 13,
+    backgroundColor: colors.blueTint10, paddingHorizontal: 9,
+    paddingVertical: 5, minHeight: 44, borderRadius: 13,
   },
   itemStatusText: { color: colors.yeditepeBlue, fontSize: 10.5, fontWeight: '800' },
   studentCard: {
-    backgroundColor: 'rgba(34, 113, 196, 0.08)', borderRadius: 18, padding: 14,
+    backgroundColor: colors.blueTint08, borderRadius: 18, padding: 14,
     flexDirection: 'row', alignItems: 'center', marginBottom: 14,
-    borderWidth: 1, borderColor: 'rgba(34, 113, 196, 0.14)',
+    borderWidth: 1, borderColor: colors.blueTint14,
   },
   studentIconBox: {
     width: 56, height: 56, borderRadius: 16, backgroundColor: colors.white,
@@ -353,7 +359,7 @@ const styles = StyleSheet.create({
   studentMeta: { fontSize: 12.5, color: colors.textSecondary },
   infoList: { gap: 11 },
   infoRow: {
-    minHeight: 36, borderTopWidth: 1, borderTopColor: 'rgba(193, 198, 211, 0.24)',
+    minHeight: 44, borderTopWidth: 1, borderTopColor: colors.borderLight24,
     paddingTop: 10, flexDirection: 'row', alignItems: 'center',
     justifyContent: 'space-between', gap: 12,
   },
@@ -362,7 +368,7 @@ const styles = StyleSheet.create({
   infoValue: { flex: 1, textAlign: 'right', fontSize: 12.8, fontWeight: '700', color: colors.textPrimary, lineHeight: 18 },
   answerBlock: {
     paddingBottom: 14, marginBottom: 14,
-    borderBottomWidth: 1, borderBottomColor: 'rgba(193, 198, 211, 0.30)',
+    borderBottomWidth: 1, borderBottomColor: colors.borderLight30,
   },
   answerBlockLast: { paddingBottom: 0 },
   answerLabel: { fontSize: 13, fontWeight: '800', color: colors.textPrimary, marginBottom: 7 },
@@ -375,7 +381,7 @@ const styles = StyleSheet.create({
   },
   noteIconBox: {
     width: 52, height: 52, borderRadius: 15,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     alignItems: 'center', justifyContent: 'center', marginRight: 12,
   },
   noteTextBlock: { flex: 1 },
@@ -383,20 +389,20 @@ const styles = StyleSheet.create({
   noteText: { fontSize: 12.8, lineHeight: 19, color: colors.textSecondary },
   footerActions: {
     backgroundColor: colors.background, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8,
-    borderTopWidth: 1, borderTopColor: 'rgba(193, 198, 211, 0.35)',
+    borderTopWidth: 1, borderTopColor: colors.borderLight35,
   },
   footerTitle: { fontSize: 12, fontWeight: '800', color: colors.textPrimary, marginBottom: 6 },
   buttonGroup: { gap: 6 },
   approveButton: {
-    minHeight: 38, borderRadius: 19, backgroundColor: colors.yeditepeBlue,
+    minHeight: 44, borderRadius: 19, backgroundColor: colors.yeditepeBlue,
     alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6,
   },
   revisionButton: {
-    minHeight: 38, borderRadius: 19, backgroundColor: colors.warning,
+    minHeight: 44, borderRadius: 19, backgroundColor: colors.warning,
     alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6,
   },
   rejectButton: {
-    minHeight: 38, borderRadius: 19, backgroundColor: colors.error,
+    minHeight: 44, borderRadius: 19, backgroundColor: colors.error,
     alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6,
   },
   disabledButton: { opacity: 0.6 },

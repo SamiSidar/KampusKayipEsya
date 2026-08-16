@@ -59,7 +59,7 @@ type TabButtonProps = {
 
 function TabButton({ label, icon, active, onPress }: TabButtonProps) {
   return (
-    <Pressable style={styles.tab} onPress={onPress}>
+    <Pressable accessibilityRole="button" style={styles.tab} onPress={onPress} accessibilityLabel={label}>
       <Ionicons
         name={icon}
         size={27}
@@ -78,7 +78,7 @@ const styles = StyleSheet.create({
     height: 86,
     backgroundColor: colors.white,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(193, 198, 211, 0.38)',
+    borderTopColor: colors.borderLight38,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',

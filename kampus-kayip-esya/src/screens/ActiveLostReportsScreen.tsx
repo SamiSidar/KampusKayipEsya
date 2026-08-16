@@ -6,6 +6,7 @@ import {
   FlatList,
   Pressable,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -95,17 +96,21 @@ export function ActiveLostReportsScreen() {
       />
 
       <FlatList
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={5}
         data={reports}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item: report }) => {
           const isMatched = report.status === 'MATCH_FOUND';
 
           return (
-            <Pressable
+            <Pressable accessibilityRole="button"
               style={[
                 styles.reportCard,
                 isMatched && styles.highlightedCard,
               ]}
+              accessibilityLabel={`${report.title} bildiri detayı`}
             >
               {isMatched ? <View style={styles.leftAccent} /> : null}
 
@@ -216,11 +221,12 @@ export function ActiveLostReportsScreen() {
                 </View>
 
                 <View style={styles.actionRow}>
-                  <Pressable
+                  <Pressable accessibilityRole="button"
                     style={styles.primaryAction}
                     onPress={() =>
                       navigation.navigate('WaitingOwnerItems')
                     }
+                    accessibilityLabel="Benzer eşya kontrol et"
                   >
                     <Ionicons
                       name="search-outline"
@@ -232,7 +238,17 @@ export function ActiveLostReportsScreen() {
                     </Text>
                   </Pressable>
 
-                  <Pressable style={styles.secondaryAction}>
+                  <Pressable accessibilityRole="button"
+                    style={styles.secondaryAction}
+                    accessibilityLabel="Bildirim gönder"
+                    onPress={() =>
+                      Alert.alert(
+                        'Bildirim Gönder',
+                        'Bildirim gönderme özelliği yakında eklenecektir.',
+                        [{ text: 'Tamam' }]
+                      )
+                    }
+                  >
                     <Ionicons
                       name="notifications-outline"
                       size={15}
@@ -331,7 +347,7 @@ const styles = StyleSheet.create({
   },
   highlightedCard: {
     borderWidth: 1,
-    borderColor: 'rgba(34, 113, 196, 0.20)',
+    borderColor: colors.blueTint20,
     shadowColor: colors.yeditepeBlue,
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -349,16 +365,16 @@ const styles = StyleSheet.create({
     width: 72,
     height: 104,
     borderRadius: 18,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     alignItems: 'center',
     justifyContent: 'center',
   },
   highlightedIconPanel: {
-    backgroundColor: 'rgba(34, 113, 196, 0.14)',
+    backgroundColor: colors.blueTint14,
   },
   verticalDivider: {
     width: 1,
-    backgroundColor: 'rgba(193, 198, 211, 0.45)',
+    backgroundColor: colors.borderLight45,
     marginHorizontal: 13,
     borderRadius: 1,
   },
@@ -411,14 +427,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 6, minHeight: 44,
     borderRadius: 14,
   },
   approvedStatusBadge: {
-    backgroundColor: 'rgba(46, 125, 50, 0.10)',
+    backgroundColor: colors.successTint10,
   },
   matchedStatusBadge: {
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
   },
   statusText: {
     fontSize: 11,
@@ -435,13 +451,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: '#F2F3FB',
+    backgroundColor: colors.surfaceLight,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 6, minHeight: 44,
     borderRadius: 14,
   },
   matchBadgeActive: {
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
   },
   matchBadgeText: {
     fontSize: 11,
@@ -458,7 +474,7 @@ const styles = StyleSheet.create({
   },
   primaryAction: {
     flex: 1,
-    minHeight: 38,
+    minHeight: 44,
     paddingHorizontal: 10,
     borderRadius: 19,
     backgroundColor: colors.yeditepeBlue,
@@ -479,10 +495,10 @@ const styles = StyleSheet.create({
   },
   secondaryAction: {
     flex: 1,
-    minHeight: 38,
+    minHeight: 44,
     paddingHorizontal: 10,
     borderRadius: 19,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',

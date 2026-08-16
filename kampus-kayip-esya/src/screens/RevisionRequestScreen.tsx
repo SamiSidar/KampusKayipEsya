@@ -164,7 +164,7 @@ export function RevisionRequestScreen() {
           <Text style={styles.cardTitle}>Düzenleme Nedeni</Text>
           <View style={styles.checklist}>
             {checklistItems.map(item => (
-              <Pressable key={item} style={styles.checkItem}>
+              <Pressable accessibilityRole="button" key={item} style={styles.checkItem} accessibilityLabel={item}>
                 <View style={styles.checkBox}>
                   <Ionicons name="checkmark" size={15} color={colors.yeditepeBlue} />
                 </View>
@@ -192,10 +192,12 @@ export function RevisionRequestScreen() {
       </ScrollView>
 
       <View style={styles.footerActions}>
-        <Pressable
+        <Pressable accessibilityRole="button"
           style={[styles.submitButton, isProcessing && styles.disabledButton]}
           onPress={handleSubmit}
           disabled={isProcessing}
+          accessibilityState={{ disabled: isProcessing }}
+          accessibilityLabel="Düzenleme isteğini gönder"
         >
           <Ionicons name="send-outline" size={18} color={colors.white} />
           <Text style={styles.submitButtonText}>
@@ -235,10 +237,10 @@ const styles = StyleSheet.create({
   statusCard: {
     backgroundColor: colors.card, borderRadius: 22, padding: 16, flexDirection: 'row', alignItems: 'center',
     shadowColor: colors.black, shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 4,
-    borderWidth: 1, borderColor: 'rgba(217, 119, 6, 0.18)',
+    borderWidth: 1, borderColor: colors.warningTint18,
   },
   statusIconBox: {
-    width: 62, height: 62, borderRadius: 31, backgroundColor: 'rgba(217, 119, 6, 0.12)',
+    width: 62, height: 62, borderRadius: 31, backgroundColor: colors.warningTint12,
     alignItems: 'center', justifyContent: 'center', marginRight: 14,
   },
   statusTextBlock: { flex: 1 },
@@ -250,8 +252,8 @@ const styles = StyleSheet.create({
   },
   cardTitle: { fontSize: 17, fontWeight: '800', color: colors.yeditepeBlue, marginBottom: 14 },
   reportSummary: {
-    backgroundColor: 'rgba(34, 113, 196, 0.08)', borderRadius: 18, padding: 14, flexDirection: 'row', alignItems: 'center',
-    marginBottom: 14, borderWidth: 1, borderColor: 'rgba(34, 113, 196, 0.14)',
+    backgroundColor: colors.blueTint08, borderRadius: 18, padding: 14, flexDirection: 'row', alignItems: 'center',
+    marginBottom: 14, borderWidth: 1, borderColor: colors.blueTint14,
   },
   reportIconBox: {
     width: 56, height: 56, borderRadius: 16, backgroundColor: colors.white,
@@ -262,12 +264,12 @@ const styles = StyleSheet.create({
   reportMeta: { fontSize: 12.5, color: colors.textSecondary, marginBottom: 8 },
   pendingBadge: {
     alignSelf: 'flex-start', flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)', paddingHorizontal: 9, paddingVertical: 5, borderRadius: 13,
+    backgroundColor: colors.blueTint10, paddingHorizontal: 9, paddingVertical: 5, borderRadius: 13,
   },
   pendingBadgeText: { color: colors.yeditepeBlue, fontSize: 10.5, fontWeight: '800' },
   infoList: { gap: 11 },
   infoRow: {
-    minHeight: 36, borderTopWidth: 1, borderTopColor: 'rgba(193, 198, 211, 0.24)', paddingTop: 10,
+    minHeight: 44, borderTopWidth: 1, borderTopColor: colors.borderLight24, paddingTop: 10,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12,
   },
   infoLabelBlock: { minWidth: 118, flexDirection: 'row', alignItems: 'center', gap: 7 },
@@ -275,23 +277,23 @@ const styles = StyleSheet.create({
   infoValue: { flex: 1, textAlign: 'right', fontSize: 12.8, fontWeight: '700', color: colors.textPrimary, lineHeight: 18 },
   checklist: { gap: 10 },
   checkItem: {
-    minHeight: 44, borderRadius: 16, backgroundColor: '#F2F3FB', paddingHorizontal: 13,
+    minHeight: 44, borderRadius: 16, backgroundColor: colors.surfaceLight, paddingHorizontal: 13,
     flexDirection: 'row', alignItems: 'center',
   },
   checkBox: {
-    width: 24, height: 24, borderRadius: 12, backgroundColor: 'rgba(34, 113, 196, 0.12)',
+    minWidth: 44, minHeight: 44, borderRadius: 22, backgroundColor: colors.blueTint12,
     alignItems: 'center', justifyContent: 'center', marginRight: 10,
   },
   checkText: { flex: 1, fontSize: 13, fontWeight: '700', color: colors.textPrimary },
   textArea: {
-    minHeight: 130, borderWidth: 1, borderColor: 'rgba(193, 198, 211, 0.85)', borderRadius: 16,
+    minHeight: 130, borderWidth: 1, borderColor: colors.borderLight85, borderRadius: 16,
     backgroundColor: colors.white, paddingHorizontal: 15, paddingTop: 13, fontSize: 14, lineHeight: 20,
     color: colors.textPrimary, outlineStyle: 'none' as any,
   },
   helperText: { marginTop: 10, fontSize: 11.5, lineHeight: 17, color: colors.textSecondary },
   footerActions: {
     backgroundColor: colors.background, paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8,
-    borderTopWidth: 1, borderTopColor: 'rgba(193, 198, 211, 0.35)',
+    borderTopWidth: 1, borderTopColor: colors.borderLight35,
   },
   submitButton: {
     minHeight: 44, borderRadius: 22, backgroundColor: colors.warning,

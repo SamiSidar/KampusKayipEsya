@@ -18,6 +18,7 @@ import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../context/AuthContext';
 import { foundItemsService } from '../services/foundItemsService';
 import {
+import { ImageWithFallback } from '../components/ImageWithFallback';
   FoundItem,
   getFoundItemCategoryLabel,
   getFoundItemStatusLabel,
@@ -77,7 +78,7 @@ export function ItemDetailScreen() {
       >
         <View style={styles.imageCard}>
           {item.imageUrl ? (
-            <Image
+            <ImageWithFallback
               source={{ uri: item.imageUrl }}
               style={styles.itemImage}
               resizeMode="cover"
@@ -160,13 +161,14 @@ export function ItemDetailScreen() {
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable
+        <Pressable accessibilityRole="button"
           style={styles.claimButton}
           onPress={() =>
             navigation.navigate('ClaimRequest', {
               itemId: item.id,
             })
           }
+          accessibilityLabel="Bu eşya bana ait talebi oluştur"
         >
           <Ionicons
             name="hand-left-outline"
@@ -232,9 +234,9 @@ const styles = StyleSheet.create({
     height: 230,
     borderRadius: 20,
     overflow: 'hidden',
-    backgroundColor: '#E7E8F0',
+    backgroundColor: colors.surfaceMuted,
     borderWidth: 1,
-    borderColor: '#E1E4ED',
+    borderColor: colors.surfaceDivider,
     shadowColor: colors.black,
     shadowOpacity: 0.06,
     shadowRadius: 10,
@@ -294,9 +296,9 @@ const styles = StyleSheet.create({
   },
 
   infoRow: {
-    minHeight: 36,
+    minHeight: 44,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(193, 198, 211, 0.24)',
+    borderTopColor: colors.borderLight24,
     paddingTop: 10,
     flexDirection: 'row',
     alignItems: 'center',
@@ -327,7 +329,7 @@ const styles = StyleSheet.create({
   },
 
   statusPill: {
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 14,
@@ -346,13 +348,13 @@ const styles = StyleSheet.create({
   },
 
   infoBox: {
-    backgroundColor: 'rgba(34, 113, 196, 0.08)',
+    backgroundColor: colors.blueTint08,
     borderRadius: 18,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'flex-start',
     borderWidth: 1,
-    borderColor: 'rgba(34, 113, 196, 0.16)',
+    borderColor: colors.blueTint16,
   },
 
   infoIcon: {
@@ -373,7 +375,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 8,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(193, 198, 211, 0.35)',
+    borderTopColor: colors.borderLight35,
   },
 
   claimButton: {

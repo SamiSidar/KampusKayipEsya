@@ -189,13 +189,14 @@ export function StudentReportDetailScreen() {
                 />
               </View>
 
-              <Pressable
+              <Pressable accessibilityRole="button"
                 style={styles.primaryButton}
                 onPress={() =>
                   navigation.navigate('ItemDetail', {
                     itemId: report.matchedItem!.id,
                   })
                 }
+                accessibilityLabel="Benzer eşyayı gör"
               >
                 <Text style={styles.primaryButtonText}>Benzer Eşyayı Gör</Text>
               </Pressable>
@@ -323,13 +324,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     elevation: 4,
     borderWidth: 1,
-    borderColor: 'rgba(34, 113, 196, 0.18)',
+    borderColor: colors.blueTint18,
   },
   statusIconBox: {
     width: 62,
     height: 62,
     borderRadius: 31,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -368,9 +369,9 @@ const styles = StyleSheet.create({
     gap: 11,
   },
   infoRow: {
-    minHeight: 36,
+    minHeight: 44,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(193, 198, 211, 0.24)',
+    borderTopColor: colors.borderLight24,
     paddingTop: 10,
     flexDirection: 'row',
     alignItems: 'center',
@@ -397,9 +398,9 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   statusPill: {
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 6, minHeight: 44,
     borderRadius: 14,
   },
   statusPillText: {
@@ -424,13 +425,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     elevation: 4,
     borderWidth: 1,
-    borderColor: 'rgba(34, 113, 196, 0.18)',
+    borderColor: colors.blueTint18,
   },
   matchIconBox: {
     width: 56,
     height: 56,
     borderRadius: 16,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 13,
@@ -451,7 +452,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   matchInfoBox: {
-    backgroundColor: '#F2F3FB',
+    backgroundColor: colors.surfaceLight,
     borderRadius: 14,
     padding: 12,
     gap: 5,
@@ -475,7 +476,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   primaryButton: {
-    minHeight: 42,
+    minHeight: 44,
     borderRadius: 21,
     backgroundColor: colors.yeditepeBlue,
     alignItems: 'center',
@@ -507,7 +508,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 15,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,

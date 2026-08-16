@@ -133,10 +133,10 @@ export function DeliveryDetailScreen() {
           </View>
         ) : null}
 
-        <Pressable style={styles.archiveButton}>
+        <View style={styles.archiveButton}>
           <Ionicons name="archive-outline" size={18} color={colors.yeditepeBlue} />
           <Text style={styles.archiveButtonText}>Kayıt Arşivde</Text>
-        </Pressable>
+        </View>
       </ScrollView>
 
       <AdminBottomBar activeTab="panel" />
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     shadowColor: colors.black, shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 4,
   },
   statusIconBox: {
-    width: 62, height: 62, borderRadius: 31, backgroundColor: 'rgba(46, 125, 50, 0.10)',
+    width: 62, height: 62, borderRadius: 31, backgroundColor: colors.successTint10,
     alignItems: 'center', justifyContent: 'center', marginRight: 14,
   },
   statusTextBlock: { flex: 1 },
@@ -192,17 +192,17 @@ const styles = StyleSheet.create({
   cardTitle: { fontSize: 17, fontWeight: '800', color: colors.yeditepeBlue, marginBottom: 14 },
   infoList: { gap: 11 },
   infoRow: {
-    minHeight: 36, borderTopWidth: 1, borderTopColor: 'rgba(193, 198, 211, 0.24)', paddingTop: 10,
+    minHeight: 44, borderTopWidth: 1, borderTopColor: colors.borderLight24, paddingTop: 10,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12,
   },
   infoLabelBlock: { minWidth: 132, flexDirection: 'row', alignItems: 'center', gap: 7 },
   infoLabel: { fontSize: 12.5, fontWeight: '700', color: colors.textSecondary },
   infoValue: { flex: 1, textAlign: 'right', fontSize: 12.8, fontWeight: '700', color: colors.textPrimary, lineHeight: 18 },
-  statusPill: { backgroundColor: 'rgba(46, 125, 50, 0.10)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 },
+  statusPill: { backgroundColor: colors.successTint10, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 14 },
   statusPillText: { fontSize: 11, fontWeight: '800', color: colors.success },
   personCard: {
-    backgroundColor: 'rgba(34, 113, 196, 0.08)', borderRadius: 18, padding: 14, flexDirection: 'row', alignItems: 'center',
-    marginBottom: 14, borderWidth: 1, borderColor: 'rgba(34, 113, 196, 0.14)',
+    backgroundColor: colors.blueTint08, borderRadius: 18, padding: 14, flexDirection: 'row', alignItems: 'center',
+    marginBottom: 14, borderWidth: 1, borderColor: colors.blueTint14,
   },
   personIcon: {
     width: 52, height: 52, borderRadius: 15, backgroundColor: colors.white,
@@ -216,15 +216,15 @@ const styles = StyleSheet.create({
     shadowColor: colors.black, shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 4,
   },
   noteIconBox: {
-    width: 52, height: 52, borderRadius: 15, backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    width: 52, height: 52, borderRadius: 15, backgroundColor: colors.blueTint10,
     alignItems: 'center', justifyContent: 'center', marginRight: 12,
   },
   noteTextBlock: { flex: 1 },
   noteTitle: { fontSize: 15, fontWeight: '800', color: colors.textPrimary, marginBottom: 6 },
   noteText: { fontSize: 12.8, lineHeight: 19, color: colors.textSecondary },
   archiveButton: {
-    minHeight: 44, borderRadius: 22, backgroundColor: 'rgba(34, 113, 196, 0.10)',
-    borderWidth: 1, borderColor: 'rgba(34, 113, 196, 0.20)',
+    minHeight: 44, borderRadius: 22, backgroundColor: colors.blueTint10,
+    borderWidth: 1, borderColor: colors.blueTint20,
     alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 7,
   },
   archiveButtonText: { color: colors.yeditepeBlue, fontSize: 13.5, fontWeight: '800' },

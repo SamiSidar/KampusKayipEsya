@@ -23,6 +23,7 @@ import { useAuth } from '../context/AuthContext';
 import { foundItemsService } from '../services/foundItemsService';
 import { uploadService } from '../services/uploadService';
 import { FoundItemCategory } from '../types/foundItem';
+import { ImageWithFallback } from '../components/ImageWithFallback';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -174,9 +175,10 @@ export function FoundItemCreateScreen() {
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Kategori</Text>
-            <Pressable
+            <Pressable accessibilityRole="button"
               style={styles.selectBox}
               onPress={() => setShowCategories(!showCategories)}
+              accessibilityLabel="Kategori seçin"
             >
               <Text
                 style={[
@@ -196,7 +198,7 @@ export function FoundItemCreateScreen() {
             {showCategories ? (
               <View style={styles.categoryList}>
                 {categories.map(cat => (
-                  <Pressable
+                  <Pressable accessibilityRole="button"
                     key={cat.value}
                     style={[
                       styles.categoryItem,
@@ -206,6 +208,7 @@ export function FoundItemCreateScreen() {
                       setCategory(cat.value);
                       setShowCategories(false);
                     }}
+                    accessibilityLabel={`${cat.label} seç`}
                   >
                     <Text
                       style={[
@@ -269,20 +272,20 @@ export function FoundItemCreateScreen() {
 
           {imageUri ? (
             <View style={styles.imagePreviewContainer}>
-              <Image source={{ uri: imageUri }} style={styles.imagePreview} resizeMode="cover" />
+              <ImageWithFallback source={{ uri: imageUri }} style={styles.imagePreview} resizeMode="cover" />
               <View style={styles.imageActions}>
-                <Pressable style={styles.changePhotoButton} onPress={showImageOptions}>
+                <Pressable accessibilityRole="button" style={styles.changePhotoButton} onPress={showImageOptions} accessibilityLabel="Fotoğrafı değiştir">
                   <Ionicons name="camera-outline" size={16} color={colors.yeditepeBlue} />
                   <Text style={styles.changePhotoText}>Değiştir</Text>
                 </Pressable>
-                <Pressable style={styles.removePhotoButton} onPress={() => setImageUri(null)}>
+                <Pressable accessibilityRole="button" style={styles.removePhotoButton} onPress={() => setImageUri(null)} accessibilityLabel="Fotoğrafı kaldır">
                   <Ionicons name="trash-outline" size={16} color={colors.error} />
                   <Text style={styles.removePhotoText}>Kaldır</Text>
                 </Pressable>
               </View>
             </View>
           ) : (
-            <Pressable style={styles.photoButton} onPress={showImageOptions}>
+            <Pressable accessibilityRole="button" style={styles.photoButton} onPress={showImageOptions} accessibilityLabel="Fotoğraf ekle">
               <Ionicons
                 name="camera-outline"
                 size={20}
@@ -292,10 +295,12 @@ export function FoundItemCreateScreen() {
             </Pressable>
           )}
 
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={[styles.submitButton, isSubmitting && { opacity: 0.7 }]}
             onPress={handleSave}
             disabled={isSubmitting}
+            accessibilityState={{ disabled: isSubmitting }}
+            accessibilityLabel="Kaydet"
           >
             {isSubmitting ? (
               <ActivityIndicator color={colors.white} />
@@ -323,31 +328,31 @@ const styles = StyleSheet.create({
   fieldGroup: { marginBottom: 17 },
   label: { fontSize: 13.5, fontWeight: '800', color: colors.textPrimary, marginBottom: 8 },
   input: {
-    minHeight: 50, borderWidth: 1, borderColor: 'rgba(193, 198, 211, 0.85)',
+    minHeight: 50, borderWidth: 1, borderColor: colors.borderLight85,
     borderRadius: 15, backgroundColor: colors.white, paddingHorizontal: 15,
     fontSize: 14, color: colors.textPrimary, outlineStyle: 'none' as any,
   },
   textArea: { height: 112, paddingTop: 13 },
   selectBox: {
-    minHeight: 50, borderWidth: 1, borderColor: 'rgba(193, 198, 211, 0.85)',
+    minHeight: 50, borderWidth: 1, borderColor: colors.borderLight85,
     borderRadius: 15, backgroundColor: colors.white, paddingHorizontal: 15,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
   },
   selectText: { fontSize: 14, color: colors.textSecondary, fontWeight: '600' },
   categoryList: {
-    marginTop: 8, borderWidth: 1, borderColor: 'rgba(193, 198, 211, 0.85)',
+    marginTop: 8, borderWidth: 1, borderColor: colors.borderLight85,
     borderRadius: 15, backgroundColor: colors.white, overflow: 'hidden',
   },
   categoryItem: {
     paddingHorizontal: 15, paddingVertical: 12,
-    borderBottomWidth: 1, borderBottomColor: 'rgba(193, 198, 211, 0.3)',
+    borderBottomWidth: 1, borderBottomColor: colors.borderLight30,
   },
-  categoryItemActive: { backgroundColor: 'rgba(34, 113, 196, 0.10)' },
+  categoryItemActive: { backgroundColor: colors.blueTint10 },
   categoryItemText: { fontSize: 14, color: colors.textPrimary },
   categoryItemTextActive: { color: colors.yeditepeBlue, fontWeight: '700' },
   imagePreviewContainer: {
     marginTop: 4, borderRadius: 16, overflow: 'hidden',
-    borderWidth: 1, borderColor: 'rgba(193, 198, 211, 0.5)',
+    borderWidth: 1, borderColor: colors.borderLight50,
   },
   imagePreview: {
     width: '100%', height: 200, borderTopLeftRadius: 15, borderTopRightRadius: 15,
@@ -359,13 +364,13 @@ const styles = StyleSheet.create({
   changePhotoButton: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
   },
   changePhotoText: { fontSize: 13, fontWeight: '700', color: colors.yeditepeBlue },
   removePhotoButton: {
     flexDirection: 'row', alignItems: 'center', gap: 5,
     paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20,
-    backgroundColor: 'rgba(211, 47, 47, 0.08)',
+    backgroundColor: colors.errorTint08,
   },
   removePhotoText: { fontSize: 13, fontWeight: '700', color: colors.error },
   photoButton: {

@@ -46,7 +46,7 @@ export function AdminBottomBar({ activeTab }: AdminBottomBarProps) {
 
   return (
     <View style={styles.container}>
-      <Pressable style={styles.sideTab} onPress={resetToAdminPanel}>
+      <Pressable accessibilityRole="button" style={styles.sideTab} onPress={resetToAdminPanel} accessibilityLabel="Panel sekmesi">
         <Ionicons
           name={activeTab === 'panel' ? 'grid' : 'grid-outline'}
           size={27}
@@ -67,16 +67,17 @@ export function AdminBottomBar({ activeTab }: AdminBottomBarProps) {
         </Text>
       </Pressable>
 
-      <Pressable
+      <Pressable accessibilityRole="button"
         style={styles.plusButtonWrapper}
         onPress={resetToFoundItemCreate}
+        accessibilityLabel="Yeni bulunan eşya ekle"
       >
         <View style={styles.plusButton}>
           <Ionicons name="add" size={36} color={colors.white} />
         </View>
       </Pressable>
 
-      <Pressable style={styles.sideTab} onPress={resetToAdminProfile}>
+      <Pressable accessibilityRole="button" style={styles.sideTab} onPress={resetToAdminProfile} accessibilityLabel="Profil sekmesi">
         <Ionicons
           name={activeTab === 'profile' ? 'person' : 'person-outline'}
           size={27}
@@ -105,7 +106,7 @@ const styles = StyleSheet.create({
     height: 88,
     backgroundColor: colors.white,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(193, 198, 211, 0.38)',
+    borderTopColor: colors.borderLight38,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',

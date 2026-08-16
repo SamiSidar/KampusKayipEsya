@@ -18,6 +18,7 @@ import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../context/AuthContext';
 import { foundItemsService } from '../services/foundItemsService';
 import { FoundItem, getFoundItemCategoryLabel, getFoundItemStatusLabel } from '../types/foundItem';
+import { ImageWithFallback } from '../components/ImageWithFallback';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -61,18 +62,22 @@ export function WaitingOwnerItemsScreen() {
       <AppHeader title="Bekleyen Eşyalar" showBack showNotification={false} />
 
       <FlatList
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={5}
         data={items}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={styles.itemCard}
             onPress={() =>
               navigation.navigate('AdminItemDetail', { itemId: item.id })
             }
+            accessibilityLabel={`${item.title} detayını görüntüle`}
           >
             <View style={styles.imagePanel}>
               {item.imageUrl ? (
-                <Image source={{ uri: item.imageUrl }} style={styles.itemImage} />
+                <ImageWithFallback source={{ uri: item.imageUrl }} style={styles.itemImage} />
               ) : (
                 <Ionicons name="image-outline" size={30} color={colors.textSecondary} />
               )}
@@ -100,11 +105,12 @@ export function WaitingOwnerItemsScreen() {
               </View>
 
               <View style={styles.actionRow}>
-                <Pressable
+                <Pressable accessibilityRole="button"
                   style={styles.primaryAction}
                   onPress={() =>
                     navigation.navigate('AdminItemDetail', { itemId: item.id })
                   }
+                  accessibilityLabel={`${item.title} detay`}
                 >
                   <Ionicons name="eye-outline" size={15} color={colors.white} />
                   <Text style={styles.primaryActionText}>Detay</Text>
@@ -203,7 +209,7 @@ const styles = StyleSheet.create({
     height: 126,
     borderRadius: 18,
     overflow: 'hidden',
-    backgroundColor: '#E7E8F0',
+    backgroundColor: colors.surfaceMuted,
   },
 
   itemImage: {
@@ -213,7 +219,7 @@ const styles = StyleSheet.create({
 
   verticalDivider: {
     width: 1,
-    backgroundColor: 'rgba(193, 198, 211, 0.45)',
+    backgroundColor: colors.borderLight45,
     marginHorizontal: 13,
     borderRadius: 1,
   },
@@ -268,9 +274,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 6, minHeight: 44,
     borderRadius: 14,
     marginTop: 10,
   },
@@ -288,7 +294,7 @@ const styles = StyleSheet.create({
   },
 
   primaryAction: {
-    minHeight: 38,
+    minHeight: 44,
     paddingHorizontal: 14,
     borderRadius: 19,
     backgroundColor: colors.yeditepeBlue,
@@ -313,10 +319,10 @@ const styles = StyleSheet.create({
   },
 
   secondaryAction: {
-    minHeight: 38,
+    minHeight: 44,
     paddingHorizontal: 14,
     borderRadius: 19,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',

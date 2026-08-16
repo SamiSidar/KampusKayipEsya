@@ -289,10 +289,12 @@ export function AdminReviewScreen() {
         <Text style={styles.footerTitle}>İnceleme İşlemleri</Text>
 
         <View style={styles.buttonGroup}>
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={[styles.approveButton, isProcessing && styles.disabledButton]}
             onPress={handleApprove}
             disabled={isProcessing}
+            accessibilityState={{ disabled: isProcessing }}
+            accessibilityLabel="Bildiriyi onayla"
           >
             <Ionicons
               name="checkmark-circle-outline"
@@ -304,21 +306,25 @@ export function AdminReviewScreen() {
             </Text>
           </Pressable>
 
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={[styles.revisionButton, isProcessing && styles.disabledButton]}
             onPress={() =>
               navigation.navigate('RevisionRequest', { reportId: report.id })
             }
             disabled={isProcessing}
+            accessibilityState={{ disabled: isProcessing }}
+            accessibilityLabel="Düzenleme iste"
           >
             <Ionicons name="create-outline" size={18} color={colors.white} />
             <Text style={styles.primaryButtonText}>Düzenleme İste</Text>
           </Pressable>
 
-          <Pressable
+          <Pressable accessibilityRole="button"
             style={[styles.rejectButton, isProcessing && styles.disabledButton]}
             onPress={handleReject}
             disabled={isProcessing}
+            accessibilityState={{ disabled: isProcessing }}
+            accessibilityLabel="Bildiriyi reddet"
           >
             <Ionicons
               name="close-circle-outline"
@@ -382,13 +388,13 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     elevation: 4,
     borderWidth: 1,
-    borderColor: 'rgba(34, 113, 196, 0.18)',
+    borderColor: colors.blueTint18,
   },
   statusIconBox: {
     width: 62,
     height: 62,
     borderRadius: 31,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -422,14 +428,14 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   reportSummary: {
-    backgroundColor: 'rgba(34, 113, 196, 0.08)',
+    backgroundColor: colors.blueTint08,
     borderRadius: 18,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: 'rgba(34, 113, 196, 0.14)',
+    borderColor: colors.blueTint14,
   },
   reportIconBox: {
     width: 56,
@@ -457,9 +463,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     paddingHorizontal: 9,
-    paddingVertical: 5,
+    paddingVertical: 5, minHeight: 44,
     borderRadius: 13,
   },
   pendingBadgeText: {
@@ -469,9 +475,9 @@ const styles = StyleSheet.create({
   },
   infoList: { gap: 11 },
   infoRow: {
-    minHeight: 36,
+    minHeight: 44,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(193, 198, 211, 0.24)',
+    borderTopColor: colors.borderLight24,
     paddingTop: 10,
     flexDirection: 'row',
     alignItems: 'center',
@@ -505,7 +511,7 @@ const styles = StyleSheet.create({
   checkItem: {
     minHeight: 46,
     borderRadius: 16,
-    backgroundColor: '#F2F3FB',
+    backgroundColor: colors.surfaceLight,
     paddingHorizontal: 13,
     flexDirection: 'row',
     alignItems: 'center',
@@ -513,9 +519,9 @@ const styles = StyleSheet.create({
   },
   checkIconBox: {
     width: 25,
-    height: 25,
+    minHeight: 44,
     borderRadius: 12.5,
-    backgroundColor: 'rgba(34, 113, 196, 0.12)',
+    backgroundColor: colors.blueTint12,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
@@ -530,16 +536,16 @@ const styles = StyleSheet.create({
   warningItem: {
     minHeight: 46,
     borderRadius: 16,
-    backgroundColor: 'rgba(217, 119, 6, 0.10)',
+    backgroundColor: colors.warningTint10,
     paddingHorizontal: 13,
     flexDirection: 'row',
     alignItems: 'center',
   },
   warningIconBox: {
     width: 25,
-    height: 25,
+    minHeight: 44,
     borderRadius: 12.5,
-    backgroundColor: 'rgba(217, 119, 6, 0.14)',
+    backgroundColor: colors.warningTint14,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
@@ -567,7 +573,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 15,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -590,7 +596,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 8,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(193, 198, 211, 0.35)',
+    borderTopColor: colors.borderLight35,
   },
   footerTitle: {
     fontSize: 12,
@@ -600,7 +606,7 @@ const styles = StyleSheet.create({
   },
   buttonGroup: { gap: 6 },
   approveButton: {
-    minHeight: 38,
+    minHeight: 44,
     borderRadius: 19,
     backgroundColor: colors.yeditepeBlue,
     alignItems: 'center',
@@ -609,7 +615,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   revisionButton: {
-    minHeight: 38,
+    minHeight: 44,
     borderRadius: 19,
     backgroundColor: colors.warning,
     alignItems: 'center',
@@ -618,7 +624,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   rejectButton: {
-    minHeight: 38,
+    minHeight: 44,
     borderRadius: 19,
     backgroundColor: colors.error,
     alignItems: 'center',

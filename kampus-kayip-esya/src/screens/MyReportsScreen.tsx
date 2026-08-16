@@ -152,6 +152,9 @@ export function MyReportsScreen() {
       <AppHeader title="Bildirilerim" showBack={false} showNotification />
 
       <FlatList
+        initialNumToRender={10}
+        maxToRenderPerBatch={5}
+        windowSize={5}
         data={reports}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item: report }) => {
@@ -159,7 +162,7 @@ export function MyReportsScreen() {
           const isMatched = report.status === 'MATCH_FOUND';
 
           return (
-            <Pressable
+            <Pressable accessibilityRole="button"
               style={[
                 styles.reportCard,
                 isMatched && styles.highlightedCard,
@@ -169,6 +172,7 @@ export function MyReportsScreen() {
                   reportId: report.id,
                 })
               }
+              accessibilityLabel={`${report.title} bildiri detayı`}
             >
               {isMatched ? <View style={styles.leftAccent} /> : null}
 
@@ -249,7 +253,7 @@ export function MyReportsScreen() {
                 const statusStyle = getClaimStatusStyle(claim.status);
 
                 return (
-                  <Pressable
+                  <Pressable accessibilityRole="button"
                     key={`claim-${claim.id}`}
                     style={[styles.reportCard, { marginBottom: 14 }]}
                     onPress={() =>
@@ -257,6 +261,7 @@ export function MyReportsScreen() {
                         itemId: claim.item.id,
                       })
                     }
+                    accessibilityLabel={`${claim.item.title} talep detayı`}
                   >
                     <View style={styles.iconPanel}>
                       <MaterialCommunityIcons
@@ -393,7 +398,7 @@ const styles = StyleSheet.create({
 
   highlightedCard: {
     borderWidth: 1,
-    borderColor: 'rgba(34, 113, 196, 0.20)',
+    borderColor: colors.blueTint20,
     shadowColor: colors.yeditepeBlue,
     shadowOpacity: 0.1,
     shadowRadius: 12,
@@ -413,18 +418,18 @@ const styles = StyleSheet.create({
     width: 72,
     height: 86,
     borderRadius: 17,
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   highlightedIconPanel: {
-    backgroundColor: 'rgba(34, 113, 196, 0.14)',
+    backgroundColor: colors.blueTint14,
   },
 
   verticalDivider: {
     width: 1,
-    backgroundColor: 'rgba(193, 198, 211, 0.45)',
+    backgroundColor: colors.borderLight45,
     marginHorizontal: 13,
     borderRadius: 1,
   },
@@ -491,7 +496,7 @@ const styles = StyleSheet.create({
   },
 
   pendingStatus: {
-    backgroundColor: 'rgba(34, 113, 196, 0.10)',
+    backgroundColor: colors.blueTint10,
   },
 
   pendingStatusText: {
@@ -499,7 +504,7 @@ const styles = StyleSheet.create({
   },
 
   matchedStatus: {
-    backgroundColor: 'rgba(34, 113, 196, 0.12)',
+    backgroundColor: colors.blueTint12,
   },
 
   matchedStatusText: {
@@ -507,7 +512,7 @@ const styles = StyleSheet.create({
   },
 
   approvedStatus: {
-    backgroundColor: 'rgba(46, 125, 50, 0.10)',
+    backgroundColor: colors.successTint10,
   },
 
   approvedStatusText: {
@@ -515,7 +520,7 @@ const styles = StyleSheet.create({
   },
 
   rejectedStatus: {
-    backgroundColor: 'rgba(211, 47, 47, 0.10)',
+    backgroundColor: colors.errorTint10,
   },
 
   rejectedStatusText: {

@@ -7,7 +7,9 @@ import { RootStackParamList } from './types';
 import { SplashScreen } from '../screens/SplashScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
+import { EmailVerificationScreen } from '../screens/EmailVerificationScreen';
 import { ForgotPasswordScreen } from '../screens/ForgotPasswordScreen';
+import { PersonalInfoScreen } from '../screens/PersonalInfoScreen';
 
 import { StudentHomeScreen } from '../screens/StudentHomeScreen';
 import { ListingsScreen } from '../screens/ListingsScreen';
@@ -49,7 +51,9 @@ export function RootNavigator() {
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="EmailVerification" component={EmailVerificationScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="PersonalInfo" component={PersonalInfoScreen} />
 
         <Stack.Screen name="StudentHome" component={StudentHomeScreen} />
         <Stack.Screen name="Listings" component={ListingsScreen} />

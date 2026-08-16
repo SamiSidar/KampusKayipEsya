@@ -4,6 +4,9 @@ import com.yeditepe.kampuskayipesya.entity.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +19,11 @@ import java.util.Map;
 @Service
 public class JwtService {
 
+    private static final Logger log = LoggerFactory.getLogger(JwtService.class);
+
+    /** HMAC-SHA256 için minimum anahtar uzunluğu (32 karakter = 256 bit) */
+    private static final int MIN_SECRET_LENGTH = 32;
+
     @Value("${jwt.secret}")
     private String jwtSecret;
 
@@ -24,6 +32,26 @@ public class JwtService {
 
     @Value("${jwt.refresh-token-expiration}")
     private long refreshTokenExpiration;
+
+    /**
+     * Uygulama başlarken JWT secret'ın geçerliliğini kontrol eder.
+     * Secret boşsa veya çok kısaysa uygulama başlamaz.
+     */
+    @PostConstruct
+    public void validateSecret() {
+        if (jwtSecret == null || jwtSecret.isBlank()) {
+            throw new IllegalStateException(
+                    "JWT_SECRET environment variable tanımlı değil! " +
+                    "Uygulama güvenli bir secret olmadan başlatılamaz. " +
+                    "Örnek: export JWT_SECRET=<en_az_32_karakter_güçlü_anahtar>");
+        }
+        if (jwtSecret.length() < MIN_SECRET_LENGTH) {
+            throw new IllegalStateException(
+                    "JWT_SECRET çok kısa (" + jwtSecret.length() + " karakter). " +
+                    "Minimum " + MIN_SECRET_LENGTH + " karakter (256-bit) gereklidir.");
+        }
+        log.info("JWT secret doğrulandı ({} karakter)", jwtSecret.length());
+    }
 
     /**
      * Access token üretir (15 dakika geçerli).
