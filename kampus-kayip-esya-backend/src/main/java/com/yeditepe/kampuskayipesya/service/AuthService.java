@@ -162,10 +162,12 @@ public class AuthService {
 
         userRepository.save(user);
 
-        // Doğrulama emaili gönder
+        // Doğrulama emaili gönder.
+        // SMTP ayarlı değilse EmailService kodu konsola yazar (sunum modu),
+        // gönderim hata verirse de aynı fallback devreye girer — kayıt yine de geçerlidir.
         emailService.sendVerificationEmail(email, verificationCode);
 
-        log.info("Yeni kullanıcı kaydedildi, doğrulama kodu gönderildi: {}", email);
+        log.info("Yeni kullanıcı kaydedildi, doğrulama bekleniyor: {}", email);
     }
 
     /**
@@ -214,6 +216,9 @@ public class AuthService {
         user.setRole(UserRole.ADMIN);
         user.setPhoneNumber(request.getPhoneNumber());
         user.setDepartment(request.getDepartment());
+        // Admin hesabını zaten mevcut bir admin oluşturuyor; email doğrulaması
+        // istenmez. Aksi halde entity varsayılanı (false) yüzünden giriş yapamaz.
+        user.setEmailVerified(true);
 
         User savedUser = userRepository.save(user);
         return dtoMapper.toUserResponse(savedUser);
@@ -233,7 +238,8 @@ public class AuthService {
         }
 
         if (!user.isEmailVerified()) {
-            throw new BadRequestException("Email adresiniz henüz doğrulanmamış. Lütfen email'inize gelen doğrulama kodunu girin.");
+            throw new BadRequestException(
+                    "Email adresiniz henüz doğrulanmamış. Lütfen mail kutunuzdaki kodu girin.");
         }
 
         String accessToken = jwtService.generateAccessToken(user);

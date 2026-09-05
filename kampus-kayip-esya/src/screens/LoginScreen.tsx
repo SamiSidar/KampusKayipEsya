@@ -75,7 +75,18 @@ export function LoginScreen() {
       // Login başarılı olunca Splash'e gidip oradan yönlendirme yapılacak.
       navigation.replace('Splash');
     } catch (error: any) {
-      setErrorMessage(error.message || 'Giriş başarısız. Lütfen tekrar deneyin.');
+      const message: string = error?.message || '';
+
+      // Backend "Email adresiniz henüz doğrulanmamış..." döndürürse kullanıcıyı
+      // hata mesajıyla baş başa bırakmayıp doğrudan doğrulama ekranına al.
+      if (message.toLowerCase().includes('doğrulanmamış')) {
+        navigation.navigate('EmailVerification', {
+          email: email.trim().toLowerCase(),
+        });
+        return;
+      }
+
+      setErrorMessage(message || 'Giriş başarısız. Lütfen tekrar deneyin.');
     } finally {
       setIsLoading(false);
     }
@@ -153,7 +164,7 @@ export function LoginScreen() {
           </View>
 
           {/* Giriş butonu */}
-          <Pressable accessibilityRole="button"
+          <Pressable
             style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
             onPress={handleLogin}
             disabled={isLoading}
@@ -171,12 +182,12 @@ export function LoginScreen() {
           </Pressable>
 
           {/* Şifremi unuttum */}
-          <Pressable accessibilityRole="button" style={styles.forgotLink} onPress={() => navigation.navigate('ForgotPassword')} accessibilityLabel="Şifremi unuttum">
+          <Pressable style={styles.forgotLink} onPress={() => navigation.navigate('ForgotPassword')} accessibilityLabel="Şifremi unuttum">
             <Text style={styles.forgotLinkText}>Şifremi Unuttum</Text>
           </Pressable>
 
           {/* Kayıt ol linki */}
-          <Pressable accessibilityRole="button" style={styles.registerLink} onPress={() => navigation.navigate('Register')} accessibilityLabel="Kayıt ol sayfasına git">
+          <Pressable style={styles.registerLink} onPress={() => navigation.navigate('Register')} accessibilityLabel="Kayıt ol sayfasına git">
             <Text style={styles.registerLinkText}>
               Hesabınız yok mu? <Text style={styles.registerLinkBold}>Kayıt Ol</Text>
             </Text>

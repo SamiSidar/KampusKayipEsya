@@ -24,7 +24,9 @@ import { useAuth } from '../context/AuthContext';
 // - Ad, soyad, email, şifre, öğrenci numarası alır
 // - Email domain kontrolü yapar (@std.yeditepe.edu.tr veya @yeditepe.edu.tr)
 // - Backend'e register isteği gönderir
-// - Başarılıysa otomatik giriş yapar ve Splash'e yönlendirir
+// - Kayıt token döndürmez: hesap doğrulanmamış olarak oluşur ve backend
+//   6 haneli doğrulama kodunu mail ile gönderir
+// - Başarılıysa EmailVerification ekranına yönlendirir
 //
 // Kullandığı servisler:
 // - useAuth() → register fonksiyonu (AuthContext'ten)
@@ -76,16 +78,20 @@ export function RegisterScreen() {
     setErrorMessage('');
     setIsLoading(true);
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     try {
       await register({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        email: email.trim().toLowerCase(),
+        email: normalizedEmail,
         password,
         studentNumber: studentNumber.trim(),
       });
 
-      navigation.replace('EmailVerification', { email: email.trim().toLowerCase() });
+      // Kayıt sonrası hesap doğrulanmamış durumdadır; backend 6 haneli kodu
+      // mail ile gönderdi. Kullanıcıyı doğrudan kod giriş ekranına al.
+      navigation.replace('EmailVerification', { email: normalizedEmail });
     } catch (error: any) {
       setErrorMessage(error.message || 'Kayıt başarısız. Lütfen tekrar deneyin.');
     } finally {
@@ -96,7 +102,7 @@ export function RegisterScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable accessibilityRole="button" style={styles.headerSide} onPress={() => navigation.goBack()} accessibilityLabel="Geri dön">
+        <Pressable style={styles.headerSide} onPress={() => navigation.goBack()} accessibilityLabel="Geri dön">
           <Ionicons name="arrow-back" size={24} color={colors.white} />
         </Pressable>
         <Text style={styles.headerTitle}>Kayıt Ol</Text>
@@ -231,7 +237,7 @@ export function RegisterScreen() {
             </View>
 
             {/* Kayıt Ol butonu */}
-            <Pressable accessibilityRole="button"
+            <Pressable
               style={[styles.registerButton, isLoading && styles.buttonDisabled]}
               onPress={handleRegister}
               disabled={isLoading}
@@ -249,7 +255,7 @@ export function RegisterScreen() {
             </Pressable>
 
             {/* Giriş yap linki */}
-            <Pressable accessibilityRole="button" style={styles.loginLink} onPress={() => navigation.navigate('Login')} accessibilityLabel="Giriş yap sayfasına git">
+            <Pressable style={styles.loginLink} onPress={() => navigation.navigate('Login')} accessibilityLabel="Giriş yap sayfasına git">
               <Text style={styles.loginLinkText}>
                 Zaten hesabınız var mı? <Text style={styles.loginLinkBold}>Giriş Yap</Text>
               </Text>

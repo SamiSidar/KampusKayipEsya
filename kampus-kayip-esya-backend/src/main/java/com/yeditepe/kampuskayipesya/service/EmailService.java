@@ -2,19 +2,20 @@ package com.yeditepe.kampuskayipesya.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
 /**
  * EmailService — Email gönderim servisi.
  *
  * Gmail SMTP üzerinden doğrulama kodu gönderir.
- * MAIL_USERNAME ve MAIL_PASSWORD environment variable'ları gereklidir.
+ * MAIL_USERNAME ve MAIL_PASSWORD ayarlanmamışsa kodu konsola yazdırır
+ * (geliştirme / sunum ortamı için).
  */
 @Service
 public class EmailService {
@@ -26,17 +27,29 @@ public class EmailService {
     @Value("${spring.mail.username:}")
     private String fromEmail;
 
+    @Autowired
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
     /**
      * Email doğrulama kodu gönderir.
+     * SMTP ayarlanmamışsa kodu konsola yazdırır (sunum modu).
      *
      * @param to    Alıcı email adresi
      * @param code  6 haneli doğrulama kodu
      */
     public void sendVerificationEmail(String to, String code) {
+        // SMTP ayarı yoksa konsola yazdır (sunum/geliştirme modu)
+        if (fromEmail == null || fromEmail.isBlank()) {
+            log.warn("╔══════════════════════════════════════════════════╗");
+            log.warn("║  SMTP ayarlanmamış — Sunum/Geliştirme Modu      ║");
+            log.warn("║  Email: {}",  String.format("%-39s ║", to));
+            log.warn("║  Doğrulama Kodu: {}",  String.format("%-32s ║", code));
+            log.warn("╚══════════════════════════════════════════════════╝");
+            return;
+        }
+
         String subject = "Kampüs Kayıp Eşya — Email Doğrulama Kodu";
         String htmlContent = buildVerificationEmailHtml(code);
 
@@ -49,9 +62,19 @@ public class EmailService {
             helper.setText(htmlContent, true);
             mailSender.send(message);
             log.info("Doğrulama emaili gönderildi: {}", to);
-        } catch (MessagingException e) {
-            log.error("Email gönderilemedi: {}", to, e);
-            throw new RuntimeException("Email gönderilemedi. Lütfen daha sonra tekrar deneyin.");
+        } catch (Exception e) {
+            // DİKKAT: mailSender.send(...) MessagingException DEĞİL,
+            // Spring'in unchecked MailException'ını (MailAuthenticationException,
+            // MailSendException) fırlatır. Sadece MessagingException yakalamak
+            // yetmez — yanlış SMTP şifresi kaydı 500 hatasıyla düşürürdü.
+            // Doğrulama maili gönderilememesi kaydı ASLA bozmamalı.
+            log.error("Email gönderilemedi: {} — Kod konsola yazdırılıyor", to, e);
+            // Email gönderilemezse kodu konsola yazdır (sunum için fallback)
+            log.warn("╔══════════════════════════════════════════════════╗");
+            log.warn("║  Email gönderilemedi — Fallback Modu             ║");
+            log.warn("║  Email: {}",  String.format("%-39s ║", to));
+            log.warn("║  Doğrulama Kodu: {}",  String.format("%-32s ║", code));
+            log.warn("╚══════════════════════════════════════════════════╝");
         }
     }
 
