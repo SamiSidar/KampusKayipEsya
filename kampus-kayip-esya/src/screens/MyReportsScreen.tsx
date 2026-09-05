@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
 import { AppHeader } from '../components/AppHeader';
@@ -28,6 +28,20 @@ import {
   getClaimRequestStatusLabel,
 } from '../types/claimRequest';
 import { FoundItemCategory } from '../types/foundItem';
+
+// ============================================================
+// MyReportsScreen — Öğrencinin kendi kayıtları.
+//
+// Ne yapar:
+// - Öğrencinin oluşturduğu kayıp bildirilerini listeler
+// - Aynı ekranda öğrencinin yaptığı teslim taleplerini de gösterir
+// - Her kaydın güncel durumunu (onay bekliyor, eşleşme bulundu vb.) belirtir
+//
+// Ekran her odaklandığında yenilenir; yoksa talep gönderdikten sonra
+// sekmeye dönünce eski liste görünüyordu.
+//
+// Kullandığı servisler: lostReportsService.getMyReports(), claimRequestsService
+// ============================================================
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -114,9 +128,14 @@ export function MyReportsScreen() {
   const [claims, setClaims] = useState<ClaimRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // Ekran her odaklandığında yenile. useEffect ile sadece ilk açılışta
+  // yükleniyordu; talep gönderdikten sonra sekmeye dönünce eski liste
+  // görünüyordu.
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [token])
+  );
 
   async function loadData() {
     try {
@@ -162,7 +181,7 @@ export function MyReportsScreen() {
           const isMatched = report.status === 'MATCH_FOUND';
 
           return (
-            <Pressable accessibilityRole="button"
+            <Pressable
               style={[
                 styles.reportCard,
                 isMatched && styles.highlightedCard,
@@ -253,7 +272,7 @@ export function MyReportsScreen() {
                 const statusStyle = getClaimStatusStyle(claim.status);
 
                 return (
-                  <Pressable accessibilityRole="button"
+                  <Pressable
                     key={`claim-${claim.id}`}
                     style={[styles.reportCard, { marginBottom: 14 }]}
                     onPress={() =>
@@ -526,4 +545,4 @@ const styles = StyleSheet.create({
   rejectedStatusText: {
     color: colors.error,
   },
-});
+});

@@ -1,6 +1,14 @@
 import { ApiDateString, ApiId } from './common';
 import { UserSummary } from './user';
 
+// ============================================================
+// Bulunan eşya tipleri.
+//
+// Durum akışı: WAITING_OWNER → CLAIM_REQUESTED → DELIVERED (veya ARCHIVED)
+//
+// Sondaki iki fonksiyon durum ve kategori kodlarını Türkçe etikete çevirir.
+// ============================================================
+
 export type FoundItemStatus =
   | 'WAITING_OWNER'
   | 'CLAIM_REQUESTED'
@@ -51,6 +59,21 @@ export type UpdateFoundItemRequest = {
   imageUrl?: string;
   status?: FoundItemStatus;
 };
+
+/**
+ * Öğrenci taraflı listelerde (İlanlar, Ana Sayfa) gösterilecek mi?
+ *
+ * Teslim edilmiş (DELIVERED) ve arşivlenmiş (ARCHIVED) eşyalar
+ * gösterilmez: sahibi bulunmuş ya da kaydı kapatılmıştır. Backend de
+ * bu durumlarda yeni teslim talebini reddeder (ClaimRequestService),
+ * yani listede tutmak kullanıcıyı boşuna uğraştırır.
+ *
+ * Not: GET /found-items tüm eşyaları döner çünkü aynı uç admin
+ * ekranlarında da kullanılıyor. Bu yüzden ayıklama burada yapılır.
+ */
+export function isListableFoundItem(item: { status: FoundItemStatus }) {
+  return item.status === 'WAITING_OWNER' || item.status === 'CLAIM_REQUESTED';
+}
 
 export function getFoundItemStatusLabel(status: FoundItemStatus) {
   switch (status) {

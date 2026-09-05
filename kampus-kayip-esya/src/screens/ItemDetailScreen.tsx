@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,12 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import {
+  RouteProp,
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
 import { AppHeader } from '../components/AppHeader';
@@ -17,15 +22,99 @@ import { StudentBottomBar } from '../components/StudentBottomBar';
 import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../context/AuthContext';
 import { foundItemsService } from '../services/foundItemsService';
-import {
+import { claimRequestsService } from '../services/claimRequestsService';
 import { ImageWithFallback } from '../components/ImageWithFallback';
+import {
   FoundItem,
   getFoundItemCategoryLabel,
   getFoundItemStatusLabel,
 } from '../types/foundItem';
+import { ClaimRequest } from '../types/claimRequest';
+
+// ============================================================
+// ItemDetailScreen — Bulunan eşya detayı (öğrenci).
+//
+// Ne yapar:
+// - Eşyanın fotoğrafını, kategorisini ve bulunma bilgilerini gösterir
+// - Öğrencinin BU eşya için açtığı talebi de yükler:
+//   talep varsa buton yerine talebin durumunu gösteren kart çıkar
+//   (İnceleniyor / Onaylandı / Reddedildi ...)
+// - Eşya teslim edilmiş veya arşivlenmişse yeni talep açtırmaz
+//
+// Kullandığı servisler: foundItemsService, claimRequestsService
+// ============================================================
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type ItemDetailRouteProp = RouteProp<RootStackParamList, 'ItemDetail'>;
+
+/**
+ * Öğrencinin talebinin durumuna göre alt kısımda gösterilecek
+ * ikon, renk ve metni belirler.
+ */
+function getClaimView(claim: ClaimRequest) {
+  switch (claim.status) {
+    case 'PENDING':
+      return {
+        icon: 'time-outline' as const,
+        color: colors.yeditepeBlue,
+        tint: colors.blueTint12,
+        title: 'Talebiniz İnceleniyor',
+        message:
+          'Güvenlik birimi talebinizi değerlendiriyor. Sonuç bildirim olarak iletilecek.',
+      };
+
+    case 'INFO_REQUESTED':
+      return {
+        icon: 'alert-circle-outline' as const,
+        color: colors.warning,
+        tint: colors.warningTint14,
+        title: 'Ek Bilgi İstendi',
+        message:
+          claim.adminNote ||
+          'Talebiniz için ek bilgi istendi. Lütfen güvenlik birimiyle iletişime geçin.',
+      };
+
+    case 'APPROVED':
+      return {
+        icon: 'checkmark-circle-outline' as const,
+        color: colors.success,
+        tint: colors.successTint12,
+        title: 'Talebiniz Onaylandı',
+        message:
+          claim.adminNote ||
+          'Eşyanızı güvenlik biriminden teslim alabilirsiniz.',
+      };
+
+    case 'REJECTED':
+      return {
+        icon: 'close-circle-outline' as const,
+        color: colors.error,
+        tint: colors.errorTint10,
+        title: 'Talebiniz Reddedildi',
+        message:
+          claim.adminNote ||
+          'Talebiniz güvenlik birimi tarafından uygun bulunmadı.',
+      };
+
+    case 'COMPLETED':
+      return {
+        icon: 'cube-outline' as const,
+        color: colors.success,
+        tint: colors.successTint12,
+        title: 'Eşya Teslim Edildi',
+        message: 'Bu eşya size teslim edilmiştir. İşlem tamamlandı.',
+      };
+
+    default:
+      return {
+        icon: 'information-circle-outline' as const,
+        color: colors.textSecondary,
+        tint: colors.surfaceLight,
+        title: 'Talep Durumu',
+        message: 'Talebinizin durumu güncelleniyor.',
+      };
+  }
+}
 
 export function ItemDetailScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -34,15 +123,31 @@ export function ItemDetailScreen() {
   const { itemId } = route.params;
 
   const [item, setItem] = useState<FoundItem | null>(null);
+  // Öğrencinin BU eşya için daha önce açtığı talep (varsa).
+  // Olmadan ekran, talep gönderilmemiş gibi görünüyordu.
+  const [myClaim, setMyClaim] = useState<ClaimRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadItem();
-  }, [itemId]);
+  // Talep oluşturma ekranından dönüldüğünde durum güncel görünsün diye
+  // useEffect yerine useFocusEffect kullanılıyor.
+  useFocusEffect(
+    useCallback(() => {
+      loadItem();
+    }, [itemId, token])
+  );
 
   async function loadItem() {
     try {
-      const data = await foundItemsService.getFoundItemById(itemId, token);
+      const [data, myClaims] = await Promise.all([
+        foundItemsService.getFoundItemById(itemId, token),
+        claimRequestsService.getMyClaimRequests(token),
+      ]);
+
+      // Aynı eşya için birden fazla talep olabilir; en yenisini göster
+      const claimsForItem = myClaims
+        .filter(c => c.item?.id === itemId)
+        .sort((a, b) => Number(b.id) - Number(a.id));
+      setMyClaim(claimsForItem[0] ?? null);
       setItem(data);
     } catch (error) {
       console.error('Eşya detayı yüklenemedi:', error);
@@ -66,6 +171,13 @@ export function ItemDetailScreen() {
       </View>
     );
   }
+
+  // Backend kuralı (ClaimRequestService): sadece WAITING_OWNER veya
+  // CLAIM_REQUESTED durumundaki eşyalar için talep açılabilir.
+  // Teslim edilmiş / arşivlenmiş eşyada buton gösterilmemeli.
+  const canClaim =
+    item.status === 'WAITING_OWNER' || item.status === 'CLAIM_REQUESTED';
+  const claimView = myClaim ? getClaimView(myClaim) : null;
 
   return (
     <View style={styles.container}>
@@ -145,38 +257,73 @@ export function ItemDetailScreen() {
           </View>
         ) : null}
 
-        <View style={styles.infoBox}>
-          <Ionicons
-            name="information-circle-outline"
-            size={22}
-            color={colors.yeditepeBlue}
-            style={styles.infoIcon}
-          />
+        {canClaim ? (
+          <View style={styles.infoBox}>
+            <Ionicons
+              name="information-circle-outline"
+              size={22}
+              color={colors.yeditepeBlue}
+              style={styles.infoIcon}
+            />
 
-          <Text style={styles.infoText}>
-            Eşyanın size ait olduğunu düşünüyorsanız teslim talebi
-            oluşturabilirsiniz. Güvenlik birimi talebinizi inceleyecektir.
-          </Text>
-        </View>
+            <Text style={styles.infoText}>
+              Eşyanın size ait olduğunu düşünüyorsanız teslim talebi
+              oluşturabilirsiniz. Güvenlik birimi talebinizi inceleyecektir.
+            </Text>
+          </View>
+        ) : null}
       </ScrollView>
 
       <View style={styles.footer}>
-        <Pressable accessibilityRole="button"
-          style={styles.claimButton}
-          onPress={() =>
-            navigation.navigate('ClaimRequest', {
-              itemId: item.id,
-            })
-          }
-          accessibilityLabel="Bu eşya bana ait talebi oluştur"
-        >
-          <Ionicons
-            name="hand-left-outline"
-            size={19}
-            color={colors.white}
-          />
-          <Text style={styles.claimButtonText}>Bu eşya bana ait</Text>
-        </Pressable>
+        {myClaim ? (
+          // Öğrencinin bu eşya için talebi var — buton yerine durum kartı
+          <View style={[styles.claimStatusCard, { backgroundColor: claimView!.tint }]}>
+            <View style={styles.claimStatusIcon}>
+              <Ionicons name={claimView!.icon} size={26} color={claimView!.color} />
+            </View>
+            <View style={styles.claimStatusText}>
+              <Text style={[styles.claimStatusTitle, { color: claimView!.color }]}>
+                {claimView!.title}
+              </Text>
+              <Text style={styles.claimStatusMessage}>{claimView!.message}</Text>
+            </View>
+          </View>
+        ) : canClaim ? (
+          <Pressable
+            style={styles.claimButton}
+            onPress={() =>
+              navigation.navigate('ClaimRequest', {
+                itemId: item.id,
+              })
+            }
+            accessibilityLabel="Bu eşya bana ait talebi oluştur"
+          >
+            <Ionicons
+              name="hand-left-outline"
+              size={19}
+              color={colors.white}
+            />
+            <Text style={styles.claimButtonText}>Bu eşya bana ait</Text>
+          </Pressable>
+        ) : (
+          // Eşya teslim edilmiş veya arşivlenmiş — talep açılamaz
+          <View style={styles.claimStatusCard}>
+            <View style={styles.claimStatusIcon}>
+              <Ionicons
+                name="lock-closed-outline"
+                size={24}
+                color={colors.textSecondary}
+              />
+            </View>
+            <View style={styles.claimStatusText}>
+              <Text style={styles.claimClosedTitle}>Talep Oluşturulamaz</Text>
+              <Text style={styles.claimStatusMessage}>
+                Bu eşya "{getFoundItemStatusLabel(item.status)}" durumunda
+                olduğu için yeni teslim talebi alınmıyor.
+              </Text>
+            </View>
+          </View>
+        )}
       </View>
 
       <StudentBottomBar activeTab="listings" />
@@ -398,4 +545,39 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
-});
+
+  // --- Talep durumu kartı (buton yerine gösterilir) ---
+  claimStatusCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 18,
+    paddingHorizontal: 15,
+    paddingVertical: 13,
+  },
+  claimStatusIcon: {
+    width: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  claimStatusText: {
+    flex: 1,
+    gap: 3,
+  },
+  claimStatusTitle: {
+    fontSize: 14.5,
+    fontWeight: '800',
+  },
+  claimClosedTitle: {
+    fontSize: 14.5,
+    fontWeight: '800',
+    color: colors.textSecondary,
+  },
+  claimStatusMessage: {
+    fontSize: 12.5,
+    fontWeight: '600',
+    lineHeight: 18,
+    color: colors.textSecondary,
+  },
+});

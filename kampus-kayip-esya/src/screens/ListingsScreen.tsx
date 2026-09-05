@@ -19,13 +19,25 @@ import { StudentBottomBar } from '../components/StudentBottomBar';
 import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../context/AuthContext';
 import { foundItemsService } from '../services/foundItemsService';
-import {
 import { ImageWithFallback } from '../components/ImageWithFallback';
+import {
   FoundItem,
   FoundItemCategory,
   getFoundItemCategoryLabel,
   getFoundItemStatusLabel,
+  isListableFoundItem,
 } from '../types/foundItem';
+
+// ============================================================
+// ListingsScreen — Bulunan eşya ilanları (öğrenci).
+//
+// Ne yapar:
+// - Sahibi bekleyen tüm eşyaları listeler
+// - Üstteki arama kutusu ve kategori filtreleriyle listeyi daraltır
+// - Karta basılınca eşya detayına gider
+//
+// Kullandığı servis: foundItemsService (list / search / getByCategory)
+// ============================================================
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -57,7 +69,8 @@ export function ListingsScreen() {
     try {
       setIsLoading(true);
       const data = await foundItemsService.getFoundItems(token);
-      setItems(data);
+      // Teslim edilmis / arsivlenmis esyalar ilanlarda gorunmemeli
+      setItems(data.filter(isListableFoundItem));
     } catch (error) {
       console.error('Eşyalar yüklenemedi:', error);
     } finally {
@@ -74,7 +87,7 @@ export function ListingsScreen() {
     try {
       setIsLoading(true);
       const data = await foundItemsService.search(text, token);
-      setItems(data);
+      setItems(data.filter(isListableFoundItem));
     } catch (error) {
       console.error('Arama hatası:', error);
     } finally {
@@ -90,7 +103,7 @@ export function ListingsScreen() {
       const data = category
         ? await foundItemsService.getByCategory(category, token)
         : await foundItemsService.getFoundItems(token);
-      setItems(data);
+      setItems(data.filter(isListableFoundItem));
     } catch (error) {
       console.error('Filtre hatası:', error);
     } finally {
@@ -109,7 +122,7 @@ export function ListingsScreen() {
         data={items}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
-          <Pressable accessibilityRole="button"
+          <Pressable
             style={styles.itemCard}
             onPress={() =>
               navigation.navigate('ItemDetail', {
@@ -200,7 +213,7 @@ export function ListingsScreen() {
                 const isActive = activeCategory === filter.value;
 
                 return (
-                  <Pressable accessibilityRole="button"
+                  <Pressable
                     key={filter.label}
                     style={[styles.filterChip, isActive && styles.activeFilterChip]}
                     onPress={() => handleCategoryFilter(filter.value)}
@@ -469,4 +482,4 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.yeditepeBlue,
   },
-});
+});

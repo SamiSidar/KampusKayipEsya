@@ -17,7 +17,7 @@ import { StudentBottomBar } from '../components/StudentBottomBar';
 import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../context/AuthContext';
 import { foundItemsService } from '../services/foundItemsService';
-import { FoundItem } from '../types/foundItem';
+import { FoundItem, isListableFoundItem } from '../types/foundItem';
 import { ImageWithFallback } from '../components/ImageWithFallback';
 
 // ============================================================
@@ -49,7 +49,8 @@ export function StudentHomeScreen() {
     try {
       // Adım 3: Servis çağrısı → apiClient → backend
       const data = await foundItemsService.getFoundItems(token);
-      setItems(data);
+      // Teslim edilmis / arsivlenmis esyalar ana sayfada da gorunmemeli
+      setItems(data.filter(isListableFoundItem));
     } catch (error) {
       console.error('Eşyalar yüklenemedi:', error);
     } finally {
@@ -72,7 +73,7 @@ export function StudentHomeScreen() {
       >
         <View style={styles.blueBackground} />
 
-        <Pressable accessibilityRole="button"
+        <Pressable
           style={styles.reportCard}
           onPress={() => navigation.navigate('LostReport')}
           accessibilityLabel="Kayıp eşya bildir"
@@ -94,7 +95,7 @@ export function StudentHomeScreen() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Son Eklenen Eşyalar</Text>
 
-          <Pressable accessibilityRole="button" onPress={() => navigation.navigate('Listings')} accessibilityLabel="Tüm ilanları gör">
+          <Pressable onPress={() => navigation.navigate('Listings')} accessibilityLabel="Tüm ilanları gör">
             <Text style={styles.seeAllText}>Tümü</Text>
           </Pressable>
         </View>
@@ -115,7 +116,7 @@ export function StudentHomeScreen() {
             contentContainerStyle={styles.recentList}
           >
             {items.map(item => (
-              <Pressable accessibilityRole="button"
+              <Pressable
                 key={item.id}
                 style={styles.itemCard}
                 onPress={() =>
@@ -307,4 +308,4 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     marginTop: 2,
   },
-});
+});
