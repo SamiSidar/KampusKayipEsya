@@ -6,7 +6,6 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import {
@@ -18,6 +17,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
 import { AppHeader } from '../components/AppHeader';
 import { AdminBottomBar } from '../components/AdminBottomBar';
+import { InlineError } from '../components/InlineError';
+import { useDialog, DialogTone } from '../components/AppDialog';
 import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../context/AuthContext';
 import { claimRequestsService } from '../services/claimRequestsService';
@@ -26,6 +27,18 @@ import {
   getClaimRequestStatusLabel,
 } from '../types/claimRequest';
 import { getFoundItemCategoryLabel, getFoundItemStatusLabel } from '../types/foundItem';
+
+// ============================================================
+// AdminClaimRequestDetailScreen — Teslim talebi detayı (admin).
+//
+// Ne yapar:
+// - Talebi yapan öğrencinin açıklamasını ve ayırt edici özellik beyanını
+//   gösterir; admin bunu eşyanın gerçek sahibini doğrulamak için kullanır
+// - Onayla / Ek Bilgi İste / Reddet işlemlerini yapar
+// - Onaylanmış talepte 'Teslim Kaydı Oluştur' butonu görünür
+//
+// Kullandığı servis: claimRequestsService (review)
+// ============================================================
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type AdminClaimRouteProp = RouteProp<
@@ -37,12 +50,14 @@ export function AdminClaimRequestDetailScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<AdminClaimRouteProp>();
   const { token } = useAuth();
+  const { alert } = useDialog();
 
   const { claimId } = route.params;
 
   const [claim, setClaim] = useState<ClaimRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     loadClaim();
@@ -59,43 +74,52 @@ export function AdminClaimRequestDetailScreen() {
     }
   }
 
+  // Uygulama içi diyalog. Kullanıcı pencereyi kapatana kadar bekler,
+  // sonra varsa onOk callback'ini çalıştırır (eski davranışla aynı).
+  async function showAlert(
+    title: string,
+    message: string,
+    onOk?: () => void,
+    tone: DialogTone = 'success'
+  ) {
+    await alert({ title, message, tone });
+    if (onOk) onOk();
+  }
+
   async function handleApprove() {
+    setErrorMessage('');
     setIsProcessing(true);
     try {
       await claimRequestsService.approveClaimRequest(claimId, 'Talep onaylandı.', token);
-      Alert.alert('Başarılı', 'Teslim talebi onaylandı.', [
-        { text: 'Tamam', onPress: () => navigation.goBack() },
-      ]);
+      showAlert('Başarılı', 'Teslim talebi onaylandı.', () => navigation.goBack());
     } catch (error: any) {
-      Alert.alert('Hata', error?.message || 'Onaylama başarısız.');
+      setErrorMessage(error?.message || 'Onaylama başarısız.');
     } finally {
       setIsProcessing(false);
     }
   }
 
   async function handleReject() {
+    setErrorMessage('');
     setIsProcessing(true);
     try {
       await claimRequestsService.rejectClaimRequest(claimId, 'Talep reddedildi.', token);
-      Alert.alert('Başarılı', 'Teslim talebi reddedildi.', [
-        { text: 'Tamam', onPress: () => navigation.goBack() },
-      ]);
+      showAlert('Başarılı', 'Teslim talebi reddedildi.', () => navigation.goBack());
     } catch (error: any) {
-      Alert.alert('Hata', error?.message || 'Reddetme başarısız.');
+      setErrorMessage(error?.message || 'Reddetme başarısız.');
     } finally {
       setIsProcessing(false);
     }
   }
 
   async function handleRequestInfo() {
+    setErrorMessage('');
     setIsProcessing(true);
     try {
       await claimRequestsService.requestMoreInfo(claimId, 'Lütfen ek bilgi sağlayın.', token);
-      Alert.alert('Başarılı', 'Ek bilgi istendi.', [
-        { text: 'Tamam', onPress: () => navigation.goBack() },
-      ]);
+      showAlert('Başarılı', 'Ek bilgi istendi.', () => navigation.goBack());
     } catch (error: any) {
-      Alert.alert('Hata', error?.message || 'İşlem başarısız.');
+      setErrorMessage(error?.message || 'İşlem başarısız.');
     } finally {
       setIsProcessing(false);
     }
@@ -240,40 +264,57 @@ export function AdminClaimRequestDetailScreen() {
       <View style={styles.footerActions}>
         <Text style={styles.footerTitle}>Admin İşlemleri</Text>
 
-        <View style={styles.buttonGroup}>
-          <Pressable accessibilityRole="button"
-            style={[styles.approveButton, isProcessing && styles.disabledButton]}
-            onPress={handleApprove}
+        {claim.status === 'APPROVED' ? (
+          // Delivery button when claim is approved
+          <Pressable
+            style={[styles.deliveryButton, isProcessing && styles.disabledButton]}
+            onPress={() => navigation.navigate('DeliveryCreation', { claimId })}
             disabled={isProcessing}
             accessibilityState={{ disabled: isProcessing }}
-            accessibilityLabel="Talebi onayla"
+            accessibilityLabel="Eşyayı teslim et"
           >
             <Ionicons name="checkmark-circle-outline" size={18} color={colors.white} />
-            <Text style={styles.primaryButtonText}>Talebi Onayla</Text>
+            <Text style={styles.primaryButtonText}>Eşyayı Teslim Et</Text>
           </Pressable>
+        ) : (
+          // Action buttons for other statuses
+          <View style={styles.buttonGroup}>
+            <Pressable
+              style={[styles.approveButton, isProcessing && styles.disabledButton]}
+              onPress={handleApprove}
+              disabled={isProcessing}
+              accessibilityState={{ disabled: isProcessing }}
+              accessibilityLabel="Talebi onayla"
+            >
+              <Ionicons name="checkmark-circle-outline" size={18} color={colors.white} />
+              <Text style={styles.primaryButtonText}>Talebi Onayla</Text>
+            </Pressable>
 
-          <Pressable accessibilityRole="button"
-            style={[styles.revisionButton, isProcessing && styles.disabledButton]}
-            onPress={handleRequestInfo}
-            disabled={isProcessing}
-            accessibilityState={{ disabled: isProcessing }}
-            accessibilityLabel="Ek bilgi iste"
-          >
-            <Ionicons name="create-outline" size={18} color={colors.white} />
-            <Text style={styles.primaryButtonText}>Ek Bilgi İste</Text>
-          </Pressable>
+            <Pressable
+              style={[styles.revisionButton, isProcessing && styles.disabledButton]}
+              onPress={handleRequestInfo}
+              disabled={isProcessing}
+              accessibilityState={{ disabled: isProcessing }}
+              accessibilityLabel="Ek bilgi iste"
+            >
+              <Ionicons name="create-outline" size={18} color={colors.white} />
+              <Text style={styles.primaryButtonText}>Ek Bilgi İste</Text>
+            </Pressable>
 
-          <Pressable accessibilityRole="button"
-            style={[styles.rejectButton, isProcessing && styles.disabledButton]}
-            onPress={handleReject}
-            disabled={isProcessing}
-            accessibilityState={{ disabled: isProcessing }}
-            accessibilityLabel="Talebi reddet"
-          >
-            <Ionicons name="close-circle-outline" size={18} color={colors.white} />
-            <Text style={styles.primaryButtonText}>Talebi Reddet</Text>
-          </Pressable>
-        </View>
+            <Pressable
+              style={[styles.rejectButton, isProcessing && styles.disabledButton]}
+              onPress={handleReject}
+              disabled={isProcessing}
+              accessibilityState={{ disabled: isProcessing }}
+              accessibilityLabel="Talebi reddet"
+            >
+              <Ionicons name="close-circle-outline" size={18} color={colors.white} />
+              <Text style={styles.primaryButtonText}>Talebi Reddet</Text>
+            </Pressable>
+          </View>
+        )}
+
+        <InlineError message={errorMessage} />
       </View>
 
       <AdminBottomBar activeTab="panel" />
@@ -403,6 +444,10 @@ const styles = StyleSheet.create({
   },
   rejectButton: {
     minHeight: 44, borderRadius: 19, backgroundColor: colors.error,
+    alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6,
+  },
+  deliveryButton: {
+    minHeight: 44, borderRadius: 19, backgroundColor: colors.yeditepeBlue,
     alignItems: 'center', justifyContent: 'center', flexDirection: 'row', gap: 6,
   },
   disabledButton: { opacity: 0.6 },

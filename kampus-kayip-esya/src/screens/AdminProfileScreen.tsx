@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   Pressable,
-  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { CommonActions, useNavigation } from '@react-navigation/native';
@@ -13,8 +13,19 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
 import { AppHeader } from '../components/AppHeader';
 import { AdminBottomBar } from '../components/AdminBottomBar';
+import { InlineError } from '../components/InlineError';
+import { useDialog } from '../components/AppDialog';
 import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../context/AuthContext';
+
+// ============================================================
+// AdminProfileScreen — Yönetici profil ekranı.
+//
+// StudentProfileScreen ile aynı menü yapısına sahiptir; farkı rol rozeti
+// ve alt barın admin sürümünü kullanmasıdır.
+//
+// Kullandığı servis: useAuth() → logout
+// ============================================================
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -60,38 +71,61 @@ const menuItems: MenuItem[] = [
 export function AdminProfileScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { user, logout } = useAuth();
+  const { alert, confirm } = useDialog();
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   async function handleLogout() {
-    await logout();
-    navigation.dispatch(
-      CommonActions.reset({
-        index: 0,
-        routes: [{ name: 'Login' }],
-      })
-    );
+    try {
+      setLoggingOut(true);
+      setErrorMessage('');
+      await logout();
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        })
+      );
+    } catch {
+      setLoggingOut(false);
+      setErrorMessage('Çıkış yapılırken bir hata oluştu. Tekrar deneyin.');
+    }
   }
 
-  function handleMenuPress(action: MenuItem['action']) {
+  async function confirmLogout() {
+    const approved = await confirm({
+      title: 'Çıkış Yap',
+      message: 'Hesabınızdan çıkış yapmak istediğinize emin misiniz?',
+      tone: 'danger',
+      confirmText: 'Çıkış Yap',
+      cancelText: 'Vazgeç',
+    });
+
+    if (approved) handleLogout();
+  }
+
+  async function handleMenuPress(action: MenuItem['action']) {
     switch (action) {
       case 'personalInfo':
         navigation.navigate('PersonalInfo');
         break;
       case 'notifications':
-        Alert.alert(
-          'Bildirim Ayarları',
-          'Bildirim ayarları yakında eklenecektir.',
-          [{ text: 'Tamam' }]
-        );
+        await alert({
+          title: 'Bildirim Ayarları',
+          message: 'Bildirim ayarları yakında eklenecektir.',
+          tone: 'info',
+        });
         break;
       case 'help':
-        Alert.alert(
-          'Yardım',
-          'Kampüs Kayıp Eşya Uygulaması\nYeditepe Üniversitesi\n\nSorun veya önerileriniz için:\nkampuskayipesya@yeditepe.edu.tr',
-          [{ text: 'Tamam' }]
-        );
+        await alert({
+          title: 'Yardım',
+          message:
+            'Kampüs Kayıp Eşya Uygulaması\nYeditepe Üniversitesi\n\nSorun veya önerileriniz için:\nkampuskayipesya@yeditepe.edu.tr',
+          tone: 'info',
+        });
         break;
       case 'logout':
-        handleLogout();
+        await confirmLogout();
         break;
     }
   }
@@ -129,16 +163,25 @@ export function AdminProfileScreen() {
           </View>
         </View>
 
+        <View style={styles.errorWrap}>
+          <InlineError message={errorMessage} />
+        </View>
+
         <View style={styles.menuCard}>
           {menuItems.map((item, index) => {
             const isLast = index === menuItems.length - 1;
 
             return (
-              <Pressable accessibilityRole="button"
+              <Pressable
                 key={item.id}
-                style={[styles.menuItem, !isLast && styles.menuDivider]}
+                style={({ pressed }) => [
+                  styles.menuItem,
+                  !isLast && styles.menuDivider,
+                  pressed && styles.menuItemPressed,
+                ]}
                 onPress={() => handleMenuPress(item.action)}
                 accessibilityLabel={item.title}
+                disabled={loggingOut && item.action === 'logout'}
               >
                 <View
                   style={[
@@ -146,11 +189,15 @@ export function AdminProfileScreen() {
                     item.danger && styles.menuIconCircleDanger,
                   ]}
                 >
-                  <Ionicons
-                    name={item.icon}
-                    size={22}
-                    color={item.danger ? colors.error : colors.textSecondary}
-                  />
+                  {loggingOut && item.action === 'logout' ? (
+                    <ActivityIndicator size="small" color={colors.error} />
+                  ) : (
+                    <Ionicons
+                      name={item.icon}
+                      size={22}
+                      color={item.danger ? colors.error : colors.textSecondary}
+                    />
+                  )}
                 </View>
 
                 <Text
@@ -278,6 +325,10 @@ const styles = StyleSheet.create({
     color: colors.yeditepeBlue,
   },
 
+  errorWrap: {
+    marginTop: 16,
+  },
+
   menuCard: {
     backgroundColor: colors.card,
     borderRadius: 18,
@@ -299,6 +350,11 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     flexDirection: 'row',
     alignItems: 'center',
+  },
+
+  menuItemPressed: {
+    backgroundColor: colors.surfaceLight,
+    opacity: 0.85,
   },
 
   menuDivider: {

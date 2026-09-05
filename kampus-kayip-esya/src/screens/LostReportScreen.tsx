@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,18 +6,19 @@ import {
   ScrollView,
   TextInput,
   Pressable,
-  Alert,
   ActivityIndicator,
   Image,
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { CommonActions, useNavigation } from '@react-navigation/native';
+import { CommonActions, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { colors } from '../theme/colors';
 import { AppHeader } from '../components/AppHeader';
 import { StudentBottomBar } from '../components/StudentBottomBar';
+import { InlineError } from '../components/InlineError';
+import { useDialog } from '../components/AppDialog';
 import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../context/AuthContext';
 import { lostReportsService } from '../services/lostReportsService';
@@ -25,7 +26,22 @@ import { uploadService } from '../services/uploadService';
 import { FoundItemCategory } from '../types/foundItem';
 import { ImageWithFallback } from '../components/ImageWithFallback';
 
+// ============================================================
+// LostReportScreen — Kayıp eşya bildirisi (öğrenci).
+//
+// İki modda çalışır:
+// - Parametresiz açılırsa YENİ bildiri oluşturur
+// - reportId parametresiyle açılırsa mevcut bildiriyi DÜZENLER
+//   (admin düzeltme istediğinde bu mod kullanılır)
+//
+// Bildiri gönderildikten sonra admin onayına düşer, onaylanana kadar
+// aktif listede görünmez.
+//
+// Kullandığı servisler: lostReportsService, uploadService
+// ============================================================
+
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type LostReportRouteProp = RouteProp<RootStackParamList, 'LostReport'>;
 
 const categories: { label: string; value: FoundItemCategory }[] = [
   { label: 'Cüzdan', value: 'WALLET' },
@@ -39,29 +55,73 @@ const categories: { label: string; value: FoundItemCategory }[] = [
 
 export function LostReportScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<LostReportRouteProp>();
   const { token } = useAuth();
+  const { alert, choose } = useDialog();
+
+  const reportId = route.params?.reportId;
+  const isEditMode = !!reportId;
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<FoundItemCategory | ''>('');
   const [lostLocation, setLostLocation] = useState('');
-  const [lostDate, setLostDate] = useState('');
+  const [lostDate, setLostDate] = useState(() => {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  });
   const [description, setDescription] = useState('');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(isEditMode);
   const [showCategories, setShowCategories] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Edit mode'da bildiriyi yükle
+  useEffect(() => {
+    if (isEditMode && reportId) {
+      loadReport();
+    }
+  }, [isEditMode, reportId]);
+
+  async function loadReport() {
+    try {
+      const data = await lostReportsService.getLostReportById(reportId!, token);
+      setTitle(data.title);
+      setCategory(data.category);
+      setLostLocation(data.lostLocation);
+      setLostDate(data.lostDate);
+      setDescription(data.description);
+      if (data.imageUrl) {
+        setImageUri(data.imageUrl);
+      }
+    } catch (error) {
+      console.error('Bildiri yüklenemedi:', error);
+      await alert({
+        title: 'Bildiri Yüklenemedi',
+        message: 'Bildiri bilgileri getirilemedi. Lütfen tekrar deneyin.',
+        tone: 'danger',
+      });
+      navigation.goBack();
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   async function pickImage(useCamera: boolean) {
     if (useCamera) {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('İzin Gerekli', 'Kamera kullanabilmek için izin vermeniz gerekiyor.');
+        setErrorMessage('Kamera kullanabilmek için izin vermeniz gerekiyor.');
         return;
       }
     } else {
       if (Platform.OS !== 'web') {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert('İzin Gerekli', 'Galeriye erişebilmek için izin vermeniz gerekiyor.');
+          setErrorMessage('Galeriye erişebilmek için izin vermeniz gerekiyor.');
           return;
         }
       }
@@ -84,17 +144,20 @@ export function LostReportScreen() {
     }
   }
 
-  function showImageOptions() {
-    if (Platform.OS === 'web') {
-      // Web'de kamera desteklenmez, direkt galeri aç
-      pickImage(false);
-    } else {
-      Alert.alert('Fotoğraf Ekle', 'Fotoğraf kaynağını seçin', [
-        { text: 'Kamera', onPress: () => pickImage(true) },
-        { text: 'Galeri', onPress: () => pickImage(false) },
-        { text: 'İptal', style: 'cancel' },
-      ]);
-    }
+  async function showImageOptions() {
+    const source = await choose({
+      title: 'Fotoğraf Ekle',
+      message: 'Fotoğraf kaynağını seçin',
+      tone: 'info',
+      actions: [
+        { label: 'Kamera', value: 'camera' },
+        { label: 'Galeri', value: 'library' },
+        { label: 'İptal', value: 'cancel', style: 'cancel' },
+      ],
+    });
+
+    if (source === 'camera') pickImage(true);
+    else if (source === 'library') pickImage(false);
   }
 
   async function handleSubmit() {
@@ -104,39 +167,65 @@ export function LostReportScreen() {
       !lostLocation.trim() ||
       !description.trim()
     ) {
-      Alert.alert('Hata', 'Lütfen tüm alanları doldurun.');
+      setErrorMessage('Lütfen tüm alanları doldurun.');
       return;
     }
+
+    setErrorMessage('');
 
     try {
       setIsSubmitting(true);
 
-      // Fotoğraf varsa önce yükle
+      // Fotoğraf varsa ve yeni yüklenirse, önce yükle
       let uploadedImageUrl: string | undefined;
-      if (imageUri) {
+      if (imageUri && !imageUri.startsWith('http')) {
         uploadedImageUrl = await uploadService.uploadImage(imageUri, token);
+      } else if (imageUri && imageUri.startsWith('http')) {
+        // Zaten URL ise olduğu gibi kullan
+        uploadedImageUrl = imageUri;
       }
 
-      await lostReportsService.createLostReport(
-        {
-          title: title.trim(),
-          category: category as FoundItemCategory,
-          lostLocation: lostLocation.trim(),
-          lostDate: lostDate || new Date().toISOString().split('T')[0],
-          description: description.trim(),
-          imageUrl: uploadedImageUrl,
-        },
-        token
-      );
+      const payload = {
+        title: title.trim(),
+        category: category as FoundItemCategory,
+        lostLocation: lostLocation.trim(),
+        lostDate: (() => {
+          const parts = (lostDate || new Date().toISOString().split('T')[0]).split('-');
+          if (parts.length === 3) {
+            return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+          }
+          return lostDate;
+        })(),
+        description: description.trim(),
+        ...(uploadedImageUrl && { imageUrl: uploadedImageUrl }),
+      };
+
+      if (isEditMode && reportId) {
+        // Edit mode — bildiriyi güncelle
+        await lostReportsService.updateLostReport(reportId, payload, token);
+        await alert({
+          title: 'Başarılı',
+          message: 'Bildiriniz güncellendi. İncelemeye gönderildi.',
+          tone: 'success',
+        });
+      } else {
+        // Create mode — yeni bildiri oluştur
+        await lostReportsService.createLostReport(payload, token);
+        await alert({
+          title: 'Başarılı',
+          message: 'Bildiriniz gönderildi.',
+          tone: 'success',
+        });
+      }
+
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
-          routes: [{ name: 'Success' }],
+          routes: [{ name: 'Success', params: { from: 'report' } }],
         })
       );
     } catch (error: any) {
-      const message = error?.message || 'Bildiri gönderilemedi. Tekrar deneyin.';
-      Alert.alert('Hata', message);
+      setErrorMessage(error?.message || 'İşlem başarısız. Tekrar deneyin.');
       console.error('Bildiri hatası:', error);
     } finally {
       setIsSubmitting(false);
@@ -146,10 +235,26 @@ export function LostReportScreen() {
   const selectedCategoryLabel =
     categories.find(c => c.value === category)?.label || '';
 
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <AppHeader
+          title="Bildiri Düzenle"
+          showBack
+          showNotification={false}
+        />
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.yeditepeBlue} />
+        </View>
+        <StudentBottomBar activeTab="home" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <AppHeader
-        title="Kayıp Eşya Bildir"
+        title={isEditMode ? 'Bildiri Düzenle' : 'Kayıp Eşya Bildir'}
         showBack
         showNotification={false}
       />
@@ -173,7 +278,7 @@ export function LostReportScreen() {
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Kategori</Text>
-            <Pressable accessibilityRole="button"
+            <Pressable
               style={styles.selectBox}
               onPress={() => setShowCategories(!showCategories)}
               accessibilityLabel="Kategori seçin"
@@ -196,7 +301,7 @@ export function LostReportScreen() {
             {showCategories ? (
               <View style={styles.categoryList}>
                 {categories.map(cat => (
-                  <Pressable accessibilityRole="button"
+                  <Pressable
                     key={cat.value}
                     style={[
                       styles.categoryItem,
@@ -262,18 +367,18 @@ export function LostReportScreen() {
             <View style={styles.imagePreviewContainer}>
               <ImageWithFallback source={{ uri: imageUri }} style={styles.imagePreview} resizeMode="cover" />
               <View style={styles.imageActions}>
-                <Pressable accessibilityRole="button" style={styles.changePhotoButton} onPress={showImageOptions} accessibilityLabel="Fotoğrafı değiştir">
+                <Pressable style={styles.changePhotoButton} onPress={showImageOptions} accessibilityLabel="Fotoğrafı değiştir">
                   <Ionicons name="camera-outline" size={16} color={colors.yeditepeBlue} />
                   <Text style={styles.changePhotoText}>Değiştir</Text>
                 </Pressable>
-                <Pressable accessibilityRole="button" style={styles.removePhotoButton} onPress={() => setImageUri(null)} accessibilityLabel="Fotoğrafı kaldır">
+                <Pressable style={styles.removePhotoButton} onPress={() => setImageUri(null)} accessibilityLabel="Fotoğrafı kaldır">
                   <Ionicons name="trash-outline" size={16} color={colors.error} />
                   <Text style={styles.removePhotoText}>Kaldır</Text>
                 </Pressable>
               </View>
             </View>
           ) : (
-            <Pressable accessibilityRole="button" style={styles.photoButton} onPress={showImageOptions} accessibilityLabel="Fotoğraf ekle">
+            <Pressable style={styles.photoButton} onPress={showImageOptions} accessibilityLabel="Fotoğraf ekle">
               <Ionicons
                 name="camera-outline"
                 size={20}
@@ -283,7 +388,7 @@ export function LostReportScreen() {
             </Pressable>
           )}
 
-          <Pressable accessibilityRole="button"
+          <Pressable
             style={[
               styles.submitButton,
               isSubmitting && { opacity: 0.7 },
@@ -291,14 +396,18 @@ export function LostReportScreen() {
             onPress={handleSubmit}
             disabled={isSubmitting}
             accessibilityState={{ disabled: isSubmitting }}
-            accessibilityLabel="Bildirimi gönder"
+            accessibilityLabel={isEditMode ? 'Bildiriyi güncelle' : 'Bildirimi gönder'}
           >
             {isSubmitting ? (
               <ActivityIndicator color={colors.white} />
             ) : (
-              <Text style={styles.submitButtonText}>Bildirimi Gönder</Text>
+              <Text style={styles.submitButtonText}>
+                {isEditMode ? 'Düzenlemeleri Gönder' : 'Bildirimi Gönder'}
+              </Text>
             )}
           </Pressable>
+
+          <InlineError message={errorMessage} />
         </View>
       </ScrollView>
 
