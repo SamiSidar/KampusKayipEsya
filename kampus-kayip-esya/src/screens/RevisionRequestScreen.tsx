@@ -7,7 +7,6 @@ import {
   TextInput,
   Pressable,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import {
@@ -20,11 +19,25 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
 import { AppHeader } from '../components/AppHeader';
 import { AdminBottomBar } from '../components/AdminBottomBar';
+import { InlineError } from '../components/InlineError';
+import { useDialog, DialogTone } from '../components/AppDialog';
 import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../context/AuthContext';
 import { lostReportsService } from '../services/lostReportsService';
 import { LostReport, getLostReportStatusLabel } from '../types/lostReport';
 import { getFoundItemCategoryLabel } from '../types/foundItem';
+
+// ============================================================
+// RevisionRequestScreen — Öğrenciden bildiri düzeltmesi ister (admin).
+//
+// Ne yapar:
+// - Hazır düzeltme nedenlerini çoklu seçimle sunar
+// - Ek olarak serbest metin not alanı gösterir
+// - Seçilen nedenler + not tek bir metinde birleştirilip backend'e gönderilir
+//   (backend tek bir revisionNote alanı kabul ediyor)
+//
+// Kullandığı servis: lostReportsService.requestRevision()
+// ============================================================
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type RevisionRequestRouteProp = RouteProp<RootStackParamList, 'RevisionRequest'>;
@@ -40,6 +53,7 @@ export function RevisionRequestScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RevisionRequestRouteProp>();
   const { token } = useAuth();
+  const { alert } = useDialog();
 
   const { reportId } = route.params;
 
@@ -47,6 +61,16 @@ export function RevisionRequestScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
   const [revisionNote, setRevisionNote] = useState('');
+  const [selectedReasons, setSelectedReasons] = useState<string[]>([]);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  function toggleReason(reason: string) {
+    setSelectedReasons(prev =>
+      prev.includes(reason)
+        ? prev.filter(r => r !== reason)
+        : [...prev, reason]
+    );
+  }
 
   useEffect(() => {
     loadReport();
@@ -63,29 +87,50 @@ export function RevisionRequestScreen() {
     }
   }
 
+  // Uygulama içi diyalog. Kullanıcı pencereyi kapatana kadar bekler,
+  // sonra varsa onOk callback'ini çalıştırır (eski davranışla aynı).
+  async function showAlert(
+    title: string,
+    message: string,
+    onOk?: () => void,
+    tone: DialogTone = 'success'
+  ) {
+    await alert({ title, message, tone });
+    if (onOk) onOk();
+  }
+
   async function handleSubmit() {
-    if (!revisionNote.trim()) {
-      Alert.alert('Uyarı', 'Lütfen bir düzenleme notu yazın.');
+    const note = revisionNote.trim();
+
+    if (selectedReasons.length === 0 && !note) {
+      setErrorMessage(
+        'Lütfen en az bir düzenleme nedeni seçin veya öğrenciye bir not yazın.'
+      );
       return;
     }
 
+    // Seçilen nedenler + serbest not tek bir revizyon notunda birleştirilir.
+    // Backend tek bir "revisionNote" alanı kabul ediyor.
+    const reasonsBlock = selectedReasons.length
+      ? 'Düzeltilmesi gerekenler:\n' +
+        selectedReasons.map(r => `• ${r}`).join('\n')
+      : '';
+    const finalNote = [reasonsBlock, note].filter(Boolean).join('\n\n');
+
+    setErrorMessage('');
     setIsProcessing(true);
     try {
-      await lostReportsService.requestRevision(reportId, revisionNote, token);
-      Alert.alert('Başarılı', 'Düzenleme isteği gönderildi.', [
-        {
-          text: 'Tamam',
-          onPress: () =>
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'PendingReports' }],
-              })
-            ),
-        },
-      ]);
+      await lostReportsService.requestRevision(reportId, finalNote, token);
+      showAlert('Başarılı', 'Düzenleme isteği gönderildi.', () =>
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'PendingReports' }],
+          })
+        )
+      );
     } catch (error: any) {
-      Alert.alert('Hata', error?.message || 'İşlem başarısız.');
+      setErrorMessage(error?.message || 'İşlem başarısız.');
     } finally {
       setIsProcessing(false);
     }
@@ -162,15 +207,43 @@ export function RevisionRequestScreen() {
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Düzenleme Nedeni</Text>
+          <Text style={styles.cardHint}>
+            Öğrenciye iletilecek nedenleri seçin (birden fazla seçebilirsiniz).
+          </Text>
           <View style={styles.checklist}>
-            {checklistItems.map(item => (
-              <Pressable accessibilityRole="button" key={item} style={styles.checkItem} accessibilityLabel={item}>
-                <View style={styles.checkBox}>
-                  <Ionicons name="checkmark" size={15} color={colors.yeditepeBlue} />
-                </View>
-                <Text style={styles.checkText}>{item}</Text>
-              </Pressable>
-            ))}
+            {checklistItems.map(item => {
+              const isSelected = selectedReasons.includes(item);
+
+              return (
+                <Pressable
+                  key={item}
+                  style={styles.checkItem}
+                  onPress={() => toggleReason(item)}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: isSelected }}
+                  accessibilityLabel={item}
+                >
+                  <View
+                    style={[
+                      styles.checkBox,
+                      isSelected && styles.checkBoxSelected,
+                    ]}
+                  >
+                    {isSelected ? (
+                      <Ionicons name="checkmark" size={15} color={colors.white} />
+                    ) : null}
+                  </View>
+                  <Text
+                    style={[
+                      styles.checkText,
+                      isSelected && styles.checkTextSelected,
+                    ]}
+                  >
+                    {item}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
 
@@ -192,7 +265,7 @@ export function RevisionRequestScreen() {
       </ScrollView>
 
       <View style={styles.footerActions}>
-        <Pressable accessibilityRole="button"
+        <Pressable
           style={[styles.submitButton, isProcessing && styles.disabledButton]}
           onPress={handleSubmit}
           disabled={isProcessing}
@@ -204,6 +277,8 @@ export function RevisionRequestScreen() {
             {isProcessing ? 'Gönderiliyor...' : 'Düzenleme İsteğini Gönder'}
           </Text>
         </Pressable>
+
+        <InlineError message={errorMessage} />
       </View>
 
       <AdminBottomBar activeTab="panel" />
@@ -251,6 +326,7 @@ const styles = StyleSheet.create({
     shadowColor: colors.black, shadowOpacity: 0.06, shadowRadius: 12, shadowOffset: { width: 0, height: 5 }, elevation: 4,
   },
   cardTitle: { fontSize: 17, fontWeight: '800', color: colors.yeditepeBlue, marginBottom: 14 },
+  cardHint: { fontSize: 12.5, fontWeight: '600', color: colors.textSecondary, marginTop: -8, marginBottom: 12 },
   reportSummary: {
     backgroundColor: colors.blueTint08, borderRadius: 18, padding: 14, flexDirection: 'row', alignItems: 'center',
     marginBottom: 14, borderWidth: 1, borderColor: colors.blueTint14,
@@ -283,8 +359,11 @@ const styles = StyleSheet.create({
   checkBox: {
     minWidth: 44, minHeight: 44, borderRadius: 22, backgroundColor: colors.blueTint12,
     alignItems: 'center', justifyContent: 'center', marginRight: 10,
+    borderWidth: 1.5, borderColor: colors.borderLight85,
   },
+  checkBoxSelected: { backgroundColor: colors.yeditepeBlue, borderColor: colors.yeditepeBlue },
   checkText: { flex: 1, fontSize: 13, fontWeight: '700', color: colors.textPrimary },
+  checkTextSelected: { color: colors.yeditepeBlue, fontWeight: '800' },
   textArea: {
     minHeight: 130, borderWidth: 1, borderColor: colors.borderLight85, borderRadius: 16,
     backgroundColor: colors.white, paddingHorizontal: 15, paddingTop: 13, fontSize: 14, lineHeight: 20,

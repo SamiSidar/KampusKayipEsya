@@ -6,7 +6,6 @@ import {
   FlatList,
   Pressable,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -19,6 +18,19 @@ import { useAuth } from '../context/AuthContext';
 import { lostReportsService } from '../services/lostReportsService';
 import { LostReport, getLostReportStatusLabel } from '../types/lostReport';
 import { FoundItemCategory, getFoundItemCategoryLabel } from '../types/foundItem';
+import { ImageWithFallback } from '../components/ImageWithFallback';
+import { useDialog } from '../components/AppDialog';
+
+// ============================================================
+// ActiveLostReportsScreen — Onaylanmış kayıp bildirileri listesi (admin).
+//
+// Ne yapar:
+// - Durumu APPROVED veya MATCH_FOUND olan bildirileri listeler
+// - Eşleşme bulunan bildirileri renkli kenarlıkla vurgular
+// - Karta basılınca bildiri detayına (AdminReview) gider
+//
+// Kullandığı servis: lostReportsService.getLostReports()
+// ============================================================
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -46,6 +58,7 @@ function getCategoryIcon(
 export function ActiveLostReportsScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { token } = useAuth();
+  const { alert } = useDialog();
 
   const [reports, setReports] = useState<LostReport[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -105,11 +118,14 @@ export function ActiveLostReportsScreen() {
           const isMatched = report.status === 'MATCH_FOUND';
 
           return (
-            <Pressable accessibilityRole="button"
+            <Pressable
               style={[
                 styles.reportCard,
                 isMatched && styles.highlightedCard,
               ]}
+              onPress={() =>
+                navigation.navigate('AdminReview', { reportId: report.id })
+              }
               accessibilityLabel={`${report.title} bildiri detayı`}
             >
               {isMatched ? <View style={styles.leftAccent} /> : null}
@@ -120,11 +136,19 @@ export function ActiveLostReportsScreen() {
                   isMatched && styles.highlightedIconPanel,
                 ]}
               >
-                <MaterialCommunityIcons
-                  name={getCategoryIcon(report.category)}
-                  size={29}
-                  color={colors.yeditepeBlue}
-                />
+                {report.imageUrl ? (
+                  <ImageWithFallback
+                    source={{ uri: report.imageUrl }}
+                    style={styles.thumbnailImage}
+                    fallbackIconSize={29}
+                  />
+                ) : (
+                  <MaterialCommunityIcons
+                    name={getCategoryIcon(report.category)}
+                    size={29}
+                    color={colors.yeditepeBlue}
+                  />
+                )}
               </View>
 
               <View style={styles.verticalDivider} />
@@ -221,7 +245,7 @@ export function ActiveLostReportsScreen() {
                 </View>
 
                 <View style={styles.actionRow}>
-                  <Pressable accessibilityRole="button"
+                  <Pressable
                     style={styles.primaryAction}
                     onPress={() =>
                       navigation.navigate('WaitingOwnerItems')
@@ -238,15 +262,15 @@ export function ActiveLostReportsScreen() {
                     </Text>
                   </Pressable>
 
-                  <Pressable accessibilityRole="button"
+                  <Pressable
                     style={styles.secondaryAction}
                     accessibilityLabel="Bildirim gönder"
                     onPress={() =>
-                      Alert.alert(
-                        'Bildirim Gönder',
-                        'Bildirim gönderme özelliği yakında eklenecektir.',
-                        [{ text: 'Tamam' }]
-                      )
+                      alert({
+                        title: 'Bildirim Gönder',
+                        message: 'Bildirim gönderme özelliği yakında eklenecektir.',
+                        tone: 'info',
+                      })
                     }
                   >
                     <Ionicons
@@ -368,6 +392,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.blueTint10,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  thumbnailImage: {
+    width: '100%',
+    height: '100%',
   },
   highlightedIconPanel: {
     backgroundColor: colors.blueTint14,

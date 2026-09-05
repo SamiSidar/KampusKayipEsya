@@ -6,7 +6,6 @@ import {
   ScrollView,
   Pressable,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import {
@@ -19,11 +18,26 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
 import { AppHeader } from '../components/AppHeader';
 import { AdminBottomBar } from '../components/AdminBottomBar';
+import { InlineError } from '../components/InlineError';
+import { useDialog, DialogTone } from '../components/AppDialog';
 import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../context/AuthContext';
 import { lostReportsService } from '../services/lostReportsService';
 import { LostReport, getLostReportStatusLabel } from '../types/lostReport';
 import { getFoundItemCategoryLabel } from '../types/foundItem';
+import { ImageWithFallback } from '../components/ImageWithFallback';
+
+// ============================================================
+// AdminReviewScreen — Kayıp bildirisi inceleme ekranı (admin).
+//
+// Ne yapar:
+// - Bildirinin tüm detayını ve öğrenci açıklamasını gösterir
+// - Onay bekleyen bildirilerde: Onayla / Düzenleme İste / Reddet butonları
+// - Zaten incelenmiş bildirilerde salt okunur açılır (Aktif Kayıp
+//   Bildirileri listesinden gelindiğinde bu durum geçerlidir)
+//
+// Kullandığı servis: lostReportsService (approve / reject)
+// ============================================================
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type AdminReviewRouteProp = RouteProp<RootStackParamList, 'AdminReview'>;
@@ -32,12 +46,14 @@ export function AdminReviewScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<AdminReviewRouteProp>();
   const { token } = useAuth();
+  const { alert } = useDialog();
 
   const { reportId } = route.params;
 
   const [report, setReport] = useState<LostReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     loadReport();
@@ -54,7 +70,20 @@ export function AdminReviewScreen() {
     }
   }
 
+  // Uygulama içi diyalog. Kullanıcı pencereyi kapatana kadar bekler,
+  // sonra varsa onOk callback'ini çalıştırır (eski davranışla aynı).
+  async function showAlert(
+    title: string,
+    message: string,
+    onOk?: () => void,
+    tone: DialogTone = 'success'
+  ) {
+    await alert({ title, message, tone });
+    if (onOk) onOk();
+  }
+
   async function handleApprove() {
+    setErrorMessage('');
     setIsProcessing(true);
     try {
       await lostReportsService.approveLostReport(
@@ -62,27 +91,16 @@ export function AdminReviewScreen() {
         'Bildiriniz onaylandı ve aktif kayıp bildirimleri arasına eklendi.',
         token
       );
-      Alert.alert('Başarılı', 'Bildiri onaylandı.', [
-        {
-          text: 'Tamam',
-          onPress: () =>
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'ActiveLostReports' }],
-              })
-            ),
-        },
-      ]);
+      navigation.navigate('Success', { from: 'admin' });
     } catch (error: any) {
-      const message = error?.message || 'Onaylama başarısız oldu.';
-      Alert.alert('Hata', message);
+      setErrorMessage(error?.message || 'Onaylama başarısız oldu.');
     } finally {
       setIsProcessing(false);
     }
   }
 
   async function handleReject() {
+    setErrorMessage('');
     setIsProcessing(true);
     try {
       await lostReportsService.rejectLostReport(
@@ -90,21 +108,16 @@ export function AdminReviewScreen() {
         'Bildiriniz reddedildi.',
         token
       );
-      Alert.alert('Başarılı', 'Bildiri reddedildi.', [
-        {
-          text: 'Tamam',
-          onPress: () =>
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'PendingReports' }],
-              })
-            ),
-        },
-      ]);
+      showAlert('Başarılı', 'Bildiri reddedildi.', () =>
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'PendingReports' }],
+          })
+        )
+      );
     } catch (error: any) {
-      const message = error?.message || 'Reddetme başarısız oldu.';
-      Alert.alert('Hata', message);
+      setErrorMessage(error?.message || 'Reddetme başarısız oldu.');
     } finally {
       setIsProcessing(false);
     }
@@ -134,9 +147,18 @@ export function AdminReviewScreen() {
     );
   }
 
+  // Sadece onay bekleyen bildiriler için inceleme aksiyonları gösterilir.
+  // Onaylanmış/reddedilmiş bildiriler bu ekranda salt okunur açılır
+  // (ör. Aktif Kayıp Bildirileri listesinden gelindiğinde).
+  const isPendingReview = report.status === 'PENDING_REVIEW';
+
   return (
     <View style={styles.container}>
-      <AppHeader title="Bildiri İnceleme" showBack showNotification={false} />
+      <AppHeader
+        title={isPendingReview ? 'Bildiri İnceleme' : 'Bildiri Detayı'}
+        showBack
+        showNotification={false}
+      />
 
       <ScrollView
         style={styles.scroll}
@@ -146,7 +168,7 @@ export function AdminReviewScreen() {
         <View style={styles.statusCard}>
           <View style={styles.statusIconBox}>
             <Ionicons
-              name="time-outline"
+              name={isPendingReview ? 'time-outline' : 'checkmark-circle-outline'}
               size={34}
               color={colors.yeditepeBlue}
             />
@@ -157,7 +179,9 @@ export function AdminReviewScreen() {
               {getLostReportStatusLabel(report.status)}
             </Text>
             <Text style={styles.statusDescription}>
-              Öğrencinin kayıp eşya bildirisi yayınlanmadan önce incelenmelidir.
+              {isPendingReview
+                ? 'Öğrencinin kayıp eşya bildirisi yayınlanmadan önce incelenmelidir.'
+                : 'Bu bildiri incelenmiş durumda. Aşağıda bildiri detaylarını görüntüleyebilirsiniz.'}
             </Text>
           </View>
         </View>
@@ -221,6 +245,20 @@ export function AdminReviewScreen() {
           <Text style={styles.cardTitle}>Öğrenci Açıklaması</Text>
           <Text style={styles.descriptionText}>{report.description}</Text>
         </View>
+
+        {/* Eşya Görseli */}
+        {report.imageUrl ? (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Eşya Görseli</Text>
+            <View style={styles.imageContainer}>
+              <ImageWithFallback
+                source={{ uri: report.imageUrl }}
+                style={styles.reportImage}
+                fallbackIconSize={48}
+              />
+            </View>
+          </View>
+        ) : null}
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>İnceleme Notları</Text>
@@ -286,54 +324,72 @@ export function AdminReviewScreen() {
       </ScrollView>
 
       <View style={styles.footerActions}>
-        <Text style={styles.footerTitle}>İnceleme İşlemleri</Text>
+        {isPendingReview ? (
+          <>
+            <Text style={styles.footerTitle}>İnceleme İşlemleri</Text>
 
-        <View style={styles.buttonGroup}>
-          <Pressable accessibilityRole="button"
-            style={[styles.approveButton, isProcessing && styles.disabledButton]}
-            onPress={handleApprove}
-            disabled={isProcessing}
-            accessibilityState={{ disabled: isProcessing }}
-            accessibilityLabel="Bildiriyi onayla"
-          >
+            <View style={styles.buttonGroup}>
+              <Pressable
+                style={[styles.approveButton, isProcessing && styles.disabledButton]}
+                onPress={handleApprove}
+                disabled={isProcessing}
+                accessibilityState={{ disabled: isProcessing }}
+                accessibilityLabel="Bildiriyi onayla"
+              >
+                <Ionicons
+                  name="checkmark-circle-outline"
+                  size={18}
+                  color={colors.white}
+                />
+                <Text style={styles.primaryButtonText}>
+                  {isProcessing ? 'İşleniyor...' : 'Onayla'}
+                </Text>
+              </Pressable>
+
+              <Pressable
+                style={[styles.revisionButton, isProcessing && styles.disabledButton]}
+                onPress={() =>
+                  navigation.navigate('RevisionRequest', { reportId: report.id })
+                }
+                disabled={isProcessing}
+                accessibilityState={{ disabled: isProcessing }}
+                accessibilityLabel="Düzenleme iste"
+              >
+                <Ionicons name="create-outline" size={18} color={colors.white} />
+                <Text style={styles.primaryButtonText}>Düzenleme İste</Text>
+              </Pressable>
+
+              <Pressable
+                style={[styles.rejectButton, isProcessing && styles.disabledButton]}
+                onPress={handleReject}
+                disabled={isProcessing}
+                accessibilityState={{ disabled: isProcessing }}
+                accessibilityLabel="Bildiriyi reddet"
+              >
+                <Ionicons
+                  name="close-circle-outline"
+                  size={18}
+                  color={colors.white}
+                />
+                <Text style={styles.primaryButtonText}>Reddet</Text>
+              </Pressable>
+            </View>
+          </>
+        ) : (
+          <View style={styles.reviewedNotice}>
             <Ionicons
-              name="checkmark-circle-outline"
+              name="information-circle-outline"
               size={18}
-              color={colors.white}
+              color={colors.textSecondary}
             />
-            <Text style={styles.primaryButtonText}>
-              {isProcessing ? 'İşleniyor...' : 'Onayla'}
+            <Text style={styles.reviewedNoticeText}>
+              Bu bildiri daha önce incelenmiş — durum:{' '}
+              {getLostReportStatusLabel(report.status)}
             </Text>
-          </Pressable>
+          </View>
+        )}
 
-          <Pressable accessibilityRole="button"
-            style={[styles.revisionButton, isProcessing && styles.disabledButton]}
-            onPress={() =>
-              navigation.navigate('RevisionRequest', { reportId: report.id })
-            }
-            disabled={isProcessing}
-            accessibilityState={{ disabled: isProcessing }}
-            accessibilityLabel="Düzenleme iste"
-          >
-            <Ionicons name="create-outline" size={18} color={colors.white} />
-            <Text style={styles.primaryButtonText}>Düzenleme İste</Text>
-          </Pressable>
-
-          <Pressable accessibilityRole="button"
-            style={[styles.rejectButton, isProcessing && styles.disabledButton]}
-            onPress={handleReject}
-            disabled={isProcessing}
-            accessibilityState={{ disabled: isProcessing }}
-            accessibilityLabel="Bildiriyi reddet"
-          >
-            <Ionicons
-              name="close-circle-outline"
-              size={18}
-              color={colors.white}
-            />
-            <Text style={styles.primaryButtonText}>Reddet</Text>
-          </Pressable>
-        </View>
+        <InlineError message={errorMessage} />
       </View>
 
       <AdminBottomBar activeTab="panel" />
@@ -590,6 +646,18 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: colors.textSecondary,
   },
+  imageContainer: {
+    width: '100%',
+    height: 220,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: colors.surfaceLight,
+  },
+  reportImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
   footerActions: {
     backgroundColor: colors.background,
     paddingHorizontal: 16,
@@ -605,6 +673,18 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   buttonGroup: { gap: 6 },
+  reviewedNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 10,
+  },
+  reviewedNoticeText: {
+    flex: 1,
+    fontSize: 12.5,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
   approveButton: {
     minHeight: 44,
     borderRadius: 19,
