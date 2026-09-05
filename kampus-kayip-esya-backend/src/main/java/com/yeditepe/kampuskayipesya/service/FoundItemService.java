@@ -127,4 +127,33 @@ public class FoundItemService {
         FoundItem saved = foundItemRepository.save(item);
         return dtoMapper.toFoundItemResponse(saved);
     }
+
+    /**
+     * Eşya kaydını arşivler.
+     *
+     * Ne yapar:
+     * - Eşyanın durumunu ARCHIVED yapar
+     * - Arşivlenen eşya artık güncellenemez (FoundItemStatus.isEditable)
+     *
+     * Neden gerekli:
+     * Sahibi çıkmayan veya kaydı kapatılması gereken eşyaların
+     * aktif listelerden çıkarılmasını sağlar.
+     */
+    public FoundItemResponse archiveItem(Long itemId) {
+        FoundItem item = foundItemRepository.findById(itemId)
+                .orElseThrow(() -> new ResourceNotFoundException("Bulunan eşya", "id", itemId));
+
+        if (item.getStatus() == FoundItemStatus.ARCHIVED) {
+            throw new BadRequestException("Eşya zaten arşivlenmiş");
+        }
+
+        if (item.getStatus() == FoundItemStatus.DELIVERED) {
+            throw new BadRequestException("Teslim edilmiş eşya arşivlenemez");
+        }
+
+        item.setStatus(FoundItemStatus.ARCHIVED);
+
+        FoundItem saved = foundItemRepository.save(item);
+        return dtoMapper.toFoundItemResponse(saved);
+    }
 }

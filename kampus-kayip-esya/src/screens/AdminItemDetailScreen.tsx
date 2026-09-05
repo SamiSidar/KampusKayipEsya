@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,14 @@ import {
   Image,
   Pressable,
   ActivityIndicator,
-  Alert,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
+import {
+  RouteProp,
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
 import { AppHeader } from '../components/AppHeader';
@@ -26,6 +30,23 @@ import {
 } from '../types/foundItem';
 import { ClaimRequest, getClaimRequestStatusLabel } from '../types/claimRequest';
 import { ImageWithFallback } from '../components/ImageWithFallback';
+import { InlineError } from '../components/InlineError';
+import { useDialog } from '../components/AppDialog';
+
+// ============================================================
+// AdminItemDetailScreen — Bulunan eşya detayı (admin).
+//
+// Ne yapar:
+// - Eşya bilgilerini ve bu eşya için gelen teslim taleplerini gösterir
+// - Onaylanmış talep varsa 'Teslim Kaydı Oluştur' butonu öne çıkar;
+//   eşya ancak teslim kaydıyla 'Teslim Edilen Eşyalar' listesine düşer
+// - 'Düzenle' → FoundItemCreate ekranını düzenleme modunda açar
+// - 'Sahibi Çıkmadı — Arşivle' → durumu ARCHIVED yapar (teslim DEĞİLDİR)
+// - Teslim edilmiş/arşivlenmiş eşyada düzenleme ve arşivleme pasifleşir
+//   (backend'deki FoundItemStatus.isEditable kuralıyla aynı)
+//
+// Ekran her odaklandığında yenilenir (useFocusEffect).
+// ============================================================
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type AdminItemDetailRouteProp = RouteProp<RootStackParamList, 'AdminItemDetail'>;
@@ -37,15 +58,16 @@ export function AdminItemDetailScreen() {
 
   const { itemId } = route.params;
 
+  // Uygulama içi diyalog — web'de window.alert/confirm yerine kullanılır
+  const { alert, confirm } = useDialog();
+
   const [item, setItem] = useState<FoundItem | null>(null);
   const [claimRequests, setClaimRequests] = useState<ClaimRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     try {
       const [itemData, claims] = await Promise.all([
         foundItemsService.getFoundItemById(itemId, token),
@@ -58,6 +80,44 @@ export function AdminItemDetailScreen() {
     } finally {
       setIsLoading(false);
     }
+  }, [itemId, token]);
+
+  // Düzenleme ekranından dönüldüğünde veya arşivleme sonrası güncel veri gelsin
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [loadData])
+  );
+
+  async function archiveItem() {
+    setErrorMessage('');
+    setIsProcessing(true);
+    try {
+      await foundItemsService.archiveFoundItem(itemId, token);
+      await loadData();
+      await alert({
+        title: 'Eşya Arşivlendi',
+        message: 'Kayıt arşive taşındı ve aktif listelerden çıkarıldı.',
+        tone: 'success',
+      });
+    } catch (error: any) {
+      setErrorMessage(error?.message || 'Arşivleme işlemi başarısız oldu.');
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  async function confirmArchive() {
+    const approved = await confirm({
+      title: 'Eşyayı Arşivle',
+      message:
+        'Bu eşyayı arşivlemek istediğinize emin misiniz? Arşivlenen eşya listelerde pasif hale gelir ve artık düzenlenemez.',
+      tone: 'danger',
+      confirmText: 'Arşivle',
+      cancelText: 'Vazgeç',
+    });
+
+    if (approved) archiveItem();
   }
 
   if (isLoading) {
@@ -85,6 +145,18 @@ export function AdminItemDetailScreen() {
   }
 
   const statusLabel = getFoundItemStatusLabel(item.status);
+
+  // Backend kuralı (FoundItemStatus.isEditable): teslim edilmiş veya
+  // arşivlenmiş eşya güncellenemez. Arşivleme de yalnızca aktif kayıtlarda.
+  const isClosed = item.status === 'DELIVERED' || item.status === 'ARCHIVED';
+  const canEdit = !isClosed && !isProcessing;
+
+  // Onaylanmış ama henüz teslim kaydı oluşturulmamış talep var mı?
+  // Varsa yapılacak iş ARŞİVLEMEK DEĞİL, teslim kaydı oluşturmaktır:
+  // eşya ancak teslim kaydıyla "Teslim Edilen Eşyalar" listesine düşer.
+  // Arşivleme sadece durumu ARCHIVED yapar, teslim kaydı üretmez.
+  const approvedClaim = claimRequests.find(c => c.status === 'APPROVED');
+  const canArchive = !isClosed && !isProcessing && !approvedClaim;
 
   return (
     <View style={styles.container}>
@@ -193,7 +265,7 @@ export function AdminItemDetailScreen() {
                 const isApproved = claim.status === 'APPROVED' || claim.status === 'COMPLETED';
 
                 return (
-                  <Pressable accessibilityRole="button"
+                  <Pressable
                     key={claim.id}
                     style={styles.claimCard}
                     onPress={() =>
@@ -280,20 +352,55 @@ export function AdminItemDetailScreen() {
           <Text style={styles.cardTitle}>Admin İşlemleri</Text>
 
           <Text style={styles.actionDescription}>
-            Bu eşya için kayıt bilgilerini düzenleyebilir, teslim taleplerini
-            görüntüleyebilir veya eşyanın durumunu değiştirebilirsiniz.
+            {isClosed
+              ? `Bu eşya "${statusLabel}" durumunda olduğu için üzerinde değişiklik yapılamaz.`
+              : approvedClaim
+              ? 'Onaylanmış bir teslim talebi bekliyor. Sıradaki adım teslim kaydı oluşturmaktır.'
+              : 'Bu eşya için kayıt bilgilerini düzenleyebilir, teslim taleplerini görüntüleyebilir veya sahibi çıkmayan eşyayı arşivleyebilirsiniz.'}
           </Text>
 
+          {approvedClaim ? (
+            <View style={styles.nextStepBox}>
+              <Ionicons
+                name="arrow-forward-circle-outline"
+                size={22}
+                color={colors.success}
+              />
+              <Text style={styles.nextStepText}>
+                Bu eşyanın onaylanmış bir teslim talebi var
+                ({approvedClaim.student?.fullName || 'öğrenci'}). Eşyayı
+                sahibine verdiğinizde <Text style={styles.nextStepBold}>Teslim
+                Kaydı Oluştur</Text> deyin — eşya ancak o zaman "Teslim Edilen
+                Eşyalar" listesine düşer. Arşivleme teslim kaydı oluşturmaz.
+              </Text>
+            </View>
+          ) : null}
+
           <View style={styles.buttonGroup}>
-            <Pressable accessibilityRole="button"
-              style={styles.editButton}
-              onPress={() =>
-                Alert.alert(
-                  'Düzenle',
-                  'Eşya düzenleme özelliği yakında eklenecektir.',
-                  [{ text: 'Tamam' }]
-                )
-              }
+            {approvedClaim ? (
+              <Pressable
+                style={styles.deliveryButton}
+                onPress={() =>
+                  navigation.navigate('DeliveryCreation', {
+                    claimId: approvedClaim.id,
+                  })
+                }
+                accessibilityLabel="Teslim kaydı oluştur"
+              >
+                <Ionicons
+                  name="cube-outline"
+                  size={19}
+                  color={colors.white}
+                />
+                <Text style={styles.primaryButtonText}>Teslim Kaydı Oluştur</Text>
+              </Pressable>
+            ) : null}
+
+            <Pressable
+              style={[styles.editButton, !canEdit && styles.disabledButton]}
+              onPress={() => navigation.navigate('FoundItemCreate', { itemId })}
+              disabled={!canEdit}
+              accessibilityState={{ disabled: !canEdit }}
               accessibilityLabel="Eşyayı düzenle"
             >
               <Ionicons
@@ -304,29 +411,21 @@ export function AdminItemDetailScreen() {
               <Text style={styles.editButtonText}>Düzenle</Text>
             </Pressable>
 
-            <Pressable accessibilityRole="button"
-              style={styles.closeButton}
-              accessibilityLabel="Eşyayı arşivle"
-              onPress={() =>
-                Alert.alert(
-                  'Arşivle',
-                  'Bu eşyayı arşivlemek istediğinize emin misiniz?',
-                  [
-                    { text: 'İptal', style: 'cancel' },
-                    {
-                      text: 'Arşivle',
-                      style: 'destructive',
-                      onPress: () =>
-                        Alert.alert('Bilgi', 'Arşivleme özelliği yakında eklenecektir.'),
-                    },
-                  ]
-                )
-              }
+            <Pressable
+              style={[styles.closeButton, !canArchive && styles.disabledButton]}
+              accessibilityLabel="Sahibi çıkmadı, eşyayı arşivle"
+              disabled={!canArchive}
+              accessibilityState={{ disabled: !canArchive }}
+              onPress={confirmArchive}
             >
               <Ionicons name="archive-outline" size={19} color={colors.white} />
-              <Text style={styles.primaryButtonText}>Kapat / Arşivle</Text>
+              <Text style={styles.primaryButtonText}>
+                {isProcessing ? 'İşleniyor...' : 'Sahibi Çıkmadı — Arşivle'}
+              </Text>
             </Pressable>
           </View>
+
+          <InlineError message={errorMessage} />
         </View>
       </ScrollView>
 
@@ -641,6 +740,36 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     flexDirection: 'row',
     gap: 7,
+  },
+  disabledButton: { opacity: 0.45 },
+  deliveryButton: {
+    minHeight: 46,
+    borderRadius: 23,
+    backgroundColor: colors.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 7,
+  },
+  nextStepBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: colors.successTint10,
+    borderRadius: 16,
+    padding: 13,
+    marginBottom: 14,
+  },
+  nextStepText: {
+    flex: 1,
+    fontSize: 12.5,
+    fontWeight: '600',
+    lineHeight: 18,
+    color: colors.textPrimary,
+  },
+  nextStepBold: {
+    fontWeight: '800',
+    color: colors.success,
   },
   primaryButtonText: {
     color: colors.white,

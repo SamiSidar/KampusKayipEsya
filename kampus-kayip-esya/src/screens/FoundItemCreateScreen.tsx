@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,18 +6,24 @@ import {
   ScrollView,
   TextInput,
   Pressable,
-  Alert,
   ActivityIndicator,
   Image,
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, CommonActions } from '@react-navigation/native';
+import {
+  useNavigation,
+  useRoute,
+  CommonActions,
+  RouteProp,
+} from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as ImagePicker from 'expo-image-picker';
 import { colors } from '../theme/colors';
 import { AppHeader } from '../components/AppHeader';
 import { AdminBottomBar } from '../components/AdminBottomBar';
+import { InlineError } from '../components/InlineError';
+import { useDialog } from '../components/AppDialog';
 import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../context/AuthContext';
 import { foundItemsService } from '../services/foundItemsService';
@@ -25,7 +31,22 @@ import { uploadService } from '../services/uploadService';
 import { FoundItemCategory } from '../types/foundItem';
 import { ImageWithFallback } from '../components/ImageWithFallback';
 
+// ============================================================
+// FoundItemCreateScreen — Bulunan eşya kaydı (admin).
+//
+// İki modda çalışır:
+// - Parametresiz açılırsa YENİ eşya kaydı oluşturur (alt bardaki + butonu)
+// - itemId parametresiyle açılırsa mevcut eşyayı DÜZENLER
+//   (Eşya Detayı ekranındaki 'Düzenle' butonu)
+//
+// Fotoğraf mantığı: yeni fotoğraf seçilmezse sunucudaki mevcut görsel
+// korunur, tekrar yüklenmez.
+//
+// Kullandığı servisler: foundItemsService, uploadService
+// ============================================================
+
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type FoundItemCreateRouteProp = RouteProp<RootStackParamList, 'FoundItemCreate'>;
 
 const categories: { label: string; value: FoundItemCategory }[] = [
   { label: 'Cüzdan', value: 'WALLET' },
@@ -39,7 +60,14 @@ const categories: { label: string; value: FoundItemCategory }[] = [
 
 export function FoundItemCreateScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<FoundItemCreateRouteProp>();
   const { token } = useAuth();
+  const { alert, choose } = useDialog();
+
+  // itemId verilmişse ekran "düzenleme" modunda çalışır (Eşya Detayı > Düzenle).
+  // Verilmemişse yeni bulunan eşya kaydı oluşturulur (alt bardaki + butonu).
+  const itemId = route.params?.itemId;
+  const isEditMode = typeof itemId === 'number';
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<FoundItemCategory | ''>('');
@@ -47,22 +75,61 @@ export function FoundItemCreateScreen() {
   const [foundDate, setFoundDate] = useState('');
   const [storageLocation, setStorageLocation] = useState('');
   const [description, setDescription] = useState('');
+  // imageUri: cihazdan yeni seçilen görsel (yüklenmesi gerekir)
+  // existingImageUrl: sunucuda hâlihazırda kayıtlı görsel (tekrar yüklenmez)
   const [imageUri, setImageUri] = useState<string | null>(null);
+  const [existingImageUrl, setExistingImageUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(isEditMode);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  useEffect(() => {
+    if (!isEditMode) return;
+
+    let mounted = true;
+
+    async function loadItem() {
+      try {
+        const item = await foundItemsService.getFoundItemById(itemId!, token);
+        if (!mounted) return;
+
+        setTitle(item.title);
+        setCategory(item.category);
+        setLocation(item.location);
+        setFoundDate(item.foundDate);
+        setStorageLocation(item.storageLocation ?? '');
+        setDescription(item.description ?? '');
+        setExistingImageUrl(item.imageUrl ?? null);
+      } catch (error: any) {
+        if (mounted) {
+          setErrorMessage(error?.message || 'Eşya bilgileri yüklenemedi.');
+        }
+        console.error('Eşya yüklenemedi:', error);
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    }
+
+    loadItem();
+
+    return () => {
+      mounted = false;
+    };
+  }, [isEditMode, itemId, token]);
 
   async function pickImage(useCamera: boolean) {
     if (useCamera) {
       const { status } = await ImagePicker.requestCameraPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('İzin Gerekli', 'Kamera kullanabilmek için izin vermeniz gerekiyor.');
+        setErrorMessage('Kamera kullanabilmek için izin vermeniz gerekiyor.');
         return;
       }
     } else {
       if (Platform.OS !== 'web') {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-          Alert.alert('İzin Gerekli', 'Galeriye erişebilmek için izin vermeniz gerekiyor.');
+          setErrorMessage('Galeriye erişebilmek için izin vermeniz gerekiyor.');
           return;
         }
       }
@@ -82,76 +149,121 @@ export function FoundItemCreateScreen() {
 
     if (!result.canceled && result.assets.length > 0) {
       setImageUri(result.assets[0].uri);
+      // Yeni görsel seçildiyse sunucudaki eskisi artık gösterilmemeli
+      setExistingImageUrl(null);
     }
   }
 
-  function showImageOptions() {
-    if (Platform.OS === 'web') {
-      pickImage(false);
-    } else {
-      Alert.alert('Fotoğraf Ekle', 'Fotoğraf kaynağını seçin', [
-        { text: 'Kamera', onPress: () => pickImage(true) },
-        { text: 'Galeri', onPress: () => pickImage(false) },
-        { text: 'İptal', style: 'cancel' },
-      ]);
-    }
+  function removeImage() {
+    setImageUri(null);
+    setExistingImageUrl(null);
+  }
+
+  async function showImageOptions() {
+    const source = await choose({
+      title: 'Fotoğraf Ekle',
+      message: 'Fotoğraf kaynağını seçin',
+      tone: 'info',
+      actions: [
+        { label: 'Kamera', value: 'camera' },
+        { label: 'Galeri', value: 'library' },
+        { label: 'İptal', value: 'cancel', style: 'cancel' },
+      ],
+    });
+
+    if (source === 'camera') pickImage(true);
+    else if (source === 'library') pickImage(false);
   }
 
   async function handleSave() {
     if (!title.trim() || !category || !location.trim()) {
-      Alert.alert('Hata', 'Lütfen zorunlu alanları doldurun (Eşya Adı, Kategori, Alan).');
+      setErrorMessage('Lütfen zorunlu alanları doldurun (Eşya Adı, Kategori, Alan).');
       return;
     }
+
+    setErrorMessage('');
 
     try {
       setIsSubmitting(true);
 
-      let uploadedImageUrl: string | undefined;
+      // Yeni görsel seçildiyse yükle, seçilmediyse kayıtlı görseli koru
+      let finalImageUrl: string | undefined;
       if (imageUri) {
-        uploadedImageUrl = await uploadService.uploadImage(imageUri, token);
+        finalImageUrl = await uploadService.uploadImage(imageUri, token);
+      } else if (existingImageUrl) {
+        finalImageUrl = existingImageUrl;
       }
 
-      await foundItemsService.createFoundItem(
-        {
-          title: title.trim(),
-          category: category as FoundItemCategory,
-          location: location.trim(),
-          foundDate: foundDate || new Date().toISOString().split('T')[0],
-          description: description.trim() || undefined,
-          storageLocation: storageLocation.trim() || undefined,
-          imageUrl: uploadedImageUrl,
-        },
-        token
-      );
+      const payload = {
+        title: title.trim(),
+        category: category as FoundItemCategory,
+        location: location.trim(),
+        foundDate: foundDate || new Date().toISOString().split('T')[0],
+        description: description.trim() || undefined,
+        storageLocation: storageLocation.trim() || undefined,
+        imageUrl: finalImageUrl,
+      };
 
-      Alert.alert('Başarılı', 'Eşya kaydedildi.', [
-        {
-          text: 'Tamam',
-          onPress: () =>
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: 'WaitingOwnerItems' }],
-              })
-            ),
-        },
-      ]);
+      if (isEditMode) {
+        await foundItemsService.updateFoundItem(itemId!, payload, token);
+        // Düzenlemeden sonra eşya detayına dön; detay ekranı odaklanınca yeniler
+        showResultAndGoBack('Eşya bilgileri güncellendi.');
+      } else {
+        await foundItemsService.createFoundItem(payload, token);
+        showResultAndReset('Eşya kaydedildi.');
+      }
     } catch (error: any) {
-      const message = error?.message || 'Eşya kaydedilemedi. Tekrar deneyin.';
-      Alert.alert('Hata', message);
+      setErrorMessage(
+        error?.message ||
+          (isEditMode
+            ? 'Eşya güncellenemedi. Tekrar deneyin.'
+            : 'Eşya kaydedilemedi. Tekrar deneyin.')
+      );
       console.error('Eşya kayıt hatası:', error);
     } finally {
       setIsSubmitting(false);
     }
   }
 
+  async function showResultAndGoBack(message: string) {
+    await alert({ title: 'Başarılı', message, tone: 'success' });
+    navigation.goBack();
+  }
+
+  async function showResultAndReset(message: string) {
+    await alert({ title: 'Başarılı', message, tone: 'success' });
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'WaitingOwnerItems' }],
+      })
+    );
+  }
+
   const selectedCategoryLabel =
     categories.find(c => c.value === category)?.label || '';
+
+  const screenTitle = isEditMode ? 'Eşya Bilgilerini Düzenle' : 'Bulunan Eşya Kaydet';
+  const previewImageUri = imageUri ?? existingImageUrl;
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <AppHeader title={screenTitle} showBack showNotification={false} />
+        <ActivityIndicator
+          size="large"
+          color={colors.yeditepeBlue}
+          style={{ marginTop: 40 }}
+        />
+        <AdminBottomBar activeTab={isEditMode ? 'panel' : 'plus'} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
       <AppHeader
-        title="Bulunan Eşya Kaydet"
+        title={screenTitle}
         showBack
         showNotification={false}
       />
@@ -175,7 +287,7 @@ export function FoundItemCreateScreen() {
 
           <View style={styles.fieldGroup}>
             <Text style={styles.label}>Kategori</Text>
-            <Pressable accessibilityRole="button"
+            <Pressable
               style={styles.selectBox}
               onPress={() => setShowCategories(!showCategories)}
               accessibilityLabel="Kategori seçin"
@@ -198,7 +310,7 @@ export function FoundItemCreateScreen() {
             {showCategories ? (
               <View style={styles.categoryList}>
                 {categories.map(cat => (
-                  <Pressable accessibilityRole="button"
+                  <Pressable
                     key={cat.value}
                     style={[
                       styles.categoryItem,
@@ -270,22 +382,22 @@ export function FoundItemCreateScreen() {
             />
           </View>
 
-          {imageUri ? (
+          {previewImageUri ? (
             <View style={styles.imagePreviewContainer}>
-              <ImageWithFallback source={{ uri: imageUri }} style={styles.imagePreview} resizeMode="cover" />
+              <ImageWithFallback source={{ uri: previewImageUri }} style={styles.imagePreview} resizeMode="cover" />
               <View style={styles.imageActions}>
-                <Pressable accessibilityRole="button" style={styles.changePhotoButton} onPress={showImageOptions} accessibilityLabel="Fotoğrafı değiştir">
+                <Pressable style={styles.changePhotoButton} onPress={showImageOptions} accessibilityLabel="Fotoğrafı değiştir">
                   <Ionicons name="camera-outline" size={16} color={colors.yeditepeBlue} />
                   <Text style={styles.changePhotoText}>Değiştir</Text>
                 </Pressable>
-                <Pressable accessibilityRole="button" style={styles.removePhotoButton} onPress={() => setImageUri(null)} accessibilityLabel="Fotoğrafı kaldır">
+                <Pressable style={styles.removePhotoButton} onPress={removeImage} accessibilityLabel="Fotoğrafı kaldır">
                   <Ionicons name="trash-outline" size={16} color={colors.error} />
                   <Text style={styles.removePhotoText}>Kaldır</Text>
                 </Pressable>
               </View>
             </View>
           ) : (
-            <Pressable accessibilityRole="button" style={styles.photoButton} onPress={showImageOptions} accessibilityLabel="Fotoğraf ekle">
+            <Pressable style={styles.photoButton} onPress={showImageOptions} accessibilityLabel="Fotoğraf ekle">
               <Ionicons
                 name="camera-outline"
                 size={20}
@@ -295,23 +407,27 @@ export function FoundItemCreateScreen() {
             </Pressable>
           )}
 
-          <Pressable accessibilityRole="button"
+          <Pressable
             style={[styles.submitButton, isSubmitting && { opacity: 0.7 }]}
             onPress={handleSave}
             disabled={isSubmitting}
             accessibilityState={{ disabled: isSubmitting }}
-            accessibilityLabel="Kaydet"
+            accessibilityLabel={isEditMode ? 'Değişiklikleri kaydet' : 'Kaydet'}
           >
             {isSubmitting ? (
               <ActivityIndicator color={colors.white} />
             ) : (
-              <Text style={styles.submitButtonText}>Kaydet</Text>
+              <Text style={styles.submitButtonText}>
+                {isEditMode ? 'Değişiklikleri Kaydet' : 'Kaydet'}
+              </Text>
             )}
           </Pressable>
+
+          <InlineError message={errorMessage} />
         </View>
       </ScrollView>
 
-      <AdminBottomBar activeTab="plus" />
+      <AdminBottomBar activeTab={isEditMode ? 'panel' : 'plus'} />
     </View>
   );
 }

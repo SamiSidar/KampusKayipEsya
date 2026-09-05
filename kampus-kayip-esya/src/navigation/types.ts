@@ -1,3 +1,14 @@
+// ============================================================
+// RootStackParamList — Her ekranın hangi parametreleri aldığını tanımlar.
+//
+// React Navigation bu tipi kullanarak navigation.navigate() çağrılarını
+// denetler. Örneğin ItemDetail'e itemId göndermeyi unutursan TypeScript
+// hata verir.
+//
+// 'undefined' = ekran parametre almaz.
+// '{ x?: number } | undefined' = parametre isteğe bağlıdır.
+// ============================================================
+
 export type RootStackParamList = {
   Splash: undefined;
   Login: undefined;
@@ -12,9 +23,10 @@ export type RootStackParamList = {
   Listings: undefined;
   MyReports: undefined;
   StudentProfile: undefined;
-  LostReport: undefined;
+  // reportId verilirse mevcut bildiri düzenlenir, verilmezse yeni bildiri
+  LostReport: { reportId?: number } | undefined;
   Notifications: undefined;
-  Success: undefined;
+  Success: { from?: 'register' | 'report' | 'admin' };
   EmptyStatePreview: undefined;
 
   ItemDetail: {
@@ -34,7 +46,8 @@ export type RootStackParamList = {
   WaitingOwnerItems: undefined;
   ActiveLostReports: undefined;
   DeliveredItems: undefined;
-  FoundItemCreate: undefined;
+  // itemId verilirse ekran "düzenleme" modunda açılır, verilmezse yeni kayıt
+  FoundItemCreate: { itemId?: number } | undefined;
   AdminReview: {
     reportId: number;
   };
@@ -48,6 +61,10 @@ export type RootStackParamList = {
   };
 
   AdminClaimRequestDetail: {
+    claimId: number;
+  };
+
+  DeliveryCreation: {
     claimId: number;
   };
 

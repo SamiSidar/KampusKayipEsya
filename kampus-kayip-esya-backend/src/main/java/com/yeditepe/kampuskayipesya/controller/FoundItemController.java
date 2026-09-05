@@ -20,6 +20,7 @@ import java.util.List;
  * GET    /api/found-items/{id}       → Tekil eşya detayı
  * POST   /api/found-items            → Yeni eşya kaydı (admin)
  * PUT    /api/found-items/{id}       → Eşya güncelleme (admin)
+ * PUT    /api/found-items/{id}/archive → Eşya kaydını arşivle (admin)
  *
  * Listeleme herkes için açıktır. Oluşturma ve güncelleme admin yetkisi gerektirir.
  */
@@ -76,5 +77,16 @@ public class FoundItemController {
             @Valid @RequestBody FoundItemRequest request) {
         FoundItemResponse item = foundItemService.updateItem(id, request);
         return ResponseEntity.ok(ApiResponse.success("Eşya güncellendi", item));
+    }
+
+    /**
+     * Eşya kaydını arşivler (kapatır).
+     * Arşivlenen eşya listelerde pasif hale gelir ve artık güncellenemez.
+     * Teslim edilmiş veya zaten arşivlenmiş eşya için 400 döner.
+     */
+    @PutMapping("/{id}/archive")
+    public ResponseEntity<ApiResponse<FoundItemResponse>> archiveItem(@PathVariable Long id) {
+        FoundItemResponse item = foundItemService.archiveItem(id);
+        return ResponseEntity.ok(ApiResponse.success("Eşya arşivlendi", item));
     }
 }

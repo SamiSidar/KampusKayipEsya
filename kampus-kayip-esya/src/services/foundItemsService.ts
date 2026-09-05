@@ -75,4 +75,14 @@ export const foundItemsService = {
       token
     );
   },
+
+  // Eşyayı arşivle / kaydı kapat (admin)
+  // Teslim edilmiş veya zaten arşivlenmiş eşyalar için backend hata döner.
+  archiveFoundItem(itemId: number, token?: string | null) {
+    return apiClient.put<FoundItem>(
+      ENDPOINTS.foundItems.archive(itemId),
+      {},
+      token
+    );
+  },
 };

@@ -26,6 +26,8 @@ export const ENDPOINTS = {
     detail: (itemId: number) => `/found-items/${itemId}`,
     create: '/found-items',
     update: (itemId: number) => `/found-items/${itemId}`,
+    // PUT /found-items/{id}/archive — eşyayı arşivle (admin)
+    archive: (itemId: number) => `/found-items/${itemId}/archive`,
   },
 
   lostReports: {
