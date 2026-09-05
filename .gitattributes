@@ -1,0 +1,32 @@
+# ═══════════════════════════════════════════════════
+# Satir sonu normalizasyonu
+#
+# Sorun: Windows'ta olusturulan dosyalar CRLF, Linux/Docker LF kullanir.
+# Karisik oldugunda git, icerik ayni olsa bile dosyanin TAMAMINI
+# degismis gibi gosterir ve diff'ler okunamaz hale gelir.
+#
+# Cozum: depoda her sey LF olarak saklanir.
+# ═══════════════════════════════════════════════════
+
+# Varsayilan: metin dosyalarini otomatik algila, depoda LF sakla
+* text=auto eol=lf
+
+# Windows toplu is dosyalari CRLF olmak ZORUNDA
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Ikili dosyalar - asla dokunma
+*.jar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+
+# Gradle wrapper betigi Linux'ta calisir
+gradlew text eol=lf
