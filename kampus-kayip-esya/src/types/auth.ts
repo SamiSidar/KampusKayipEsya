@@ -1,5 +1,12 @@
 import { ApiId, UserRole } from './common';
 
+// ============================================================
+// Kimlik doğrulama tipleri.
+//
+// Giriş/kayıt isteklerinin gövdesini ve backend'in döndürdüğü token +
+// kullanıcı yapısını tanımlar.
+// ============================================================
+
 // Backend email + password ile login bekliyor
 export type LoginRequest = {
   email: string;

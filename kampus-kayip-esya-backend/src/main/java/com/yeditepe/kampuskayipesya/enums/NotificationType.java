@@ -1,5 +1,10 @@
 package com.yeditepe.kampuskayipesya.enums;
 
+/**
+ * Bildirim türleri.
+ *
+ * Frontend bu türe bakarak bildirimin ikonunu ve rengini seçer.
+ */
 public enum NotificationType {
     REPORT_APPROVED,
     MATCH_FOUND,

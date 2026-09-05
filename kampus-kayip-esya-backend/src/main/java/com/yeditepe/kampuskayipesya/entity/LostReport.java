@@ -6,12 +6,24 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+
+/**
+ * LostReport — Kayıp eşya bildirisi tablosu (lost_reports).
+ *
+ * Öğrencinin 'eşyamı kaybettim' bildirisidir. Yayınlanmadan önce admin
+ * onayından geçer.
+ *
+ * matchedItem alanı, admin bir bulunan eşyayla eşleştirme yaptığında dolar.
+ */
+
+
 @Entity
 @Table(name = "lost_reports", indexes = {
         @Index(name = "idx_lost_report_status", columnList = "status"),
         @Index(name = "idx_lost_report_student", columnList = "student_id"),
         @Index(name = "idx_lost_report_created_at", columnList = "createdAt")
 })
+
 public class LostReport {
 
     @Id

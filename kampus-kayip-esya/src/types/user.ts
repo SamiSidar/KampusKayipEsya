@@ -1,5 +1,15 @@
 import { ApiDateString, ApiId, UserRole } from './common';
 
+// ============================================================
+// Kullanıcı tipleri.
+//
+// UserSummary : listelerde/ilişkili kayıtlarda görünen kısa kullanıcı bilgisi
+// UserProfile : profil ekranında kullanılan tam bilgi
+//
+// getUserRoleLabel() rol kodunu ekranda gösterilecek Türkçe metne çevirir
+// (STUDENT → 'Öğrenci'). Kod hep İngilizce, ekran metni Türkçe kalır.
+// ============================================================
+
 // Backend'den dönen UserResponse yapısı (ortak referans tipi)
 export type UserSummary = {
   id: ApiId;

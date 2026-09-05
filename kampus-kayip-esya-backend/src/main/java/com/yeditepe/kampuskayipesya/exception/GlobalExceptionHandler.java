@@ -78,8 +78,13 @@ public class GlobalExceptionHandler {
         for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
             errors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
+        // İlk alan hatasını kullanıcı dostu mesaj olarak döndür
+        String firstError = ex.getBindingResult().getFieldErrors().stream()
+                .findFirst()
+                .map(FieldError::getDefaultMessage)
+                .orElse("Lütfen formu kontrol ediniz");
         return new ResponseEntity<>(
-                new ApiResponse<>(false, "Validasyon hatası", errors),
+                new ApiResponse<>(false, firstError, errors),
                 HttpStatus.BAD_REQUEST);
     }
 
@@ -136,10 +141,14 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
-        // Detaylar sadece sunucu loglarında — frontend'e genel mesaj
         log.error("Beklenmeyen hata: {}", ex.getMessage(), ex);
+        // Gelistirme ortaminda detayli hata mesaji goster
+        String message = "İşlem sırasında bir hata oluştu";
+        if (ex.getMessage() != null && !ex.getMessage().isBlank()) {
+            message = ex.getMessage();
+        }
         return new ResponseEntity<>(
-                ApiResponse.error("İşlem sırasında bir hata oluştu"),
+                ApiResponse.error(message),
                 HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

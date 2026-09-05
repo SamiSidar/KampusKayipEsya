@@ -5,6 +5,9 @@ import com.yeditepe.kampuskayipesya.enums.LostReportStatus;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * Dışarıya döndürülen kayıp bildirisi bilgisi (eşleşen eşya dahil).
+ */
 public class LostReportResponse {
 
     private Long id;

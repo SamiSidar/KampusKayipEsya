@@ -18,6 +18,16 @@ import { deliveriesService } from '../services/deliveriesService';
 import { DeliveryRecord } from '../types/delivery';
 import { getFoundItemCategoryLabel } from '../types/foundItem';
 
+// ============================================================
+// DeliveryDetailScreen — Teslim kaydı detayı (admin, salt okunur).
+//
+// Ne yapar:
+// - Eşya bilgisi, teslim alan kişi ve teslim eden görevli bilgisini gösterir
+// - Bu ekranda işlem butonu yoktur; kayıt arşivlenmiş kabul edilir
+//
+// Kullandığı servis: deliveriesService.getDeliveryById()
+// ============================================================
+
 type DeliveryDetailRouteProp = RouteProp<RootStackParamList, 'DeliveryDetail'>;
 
 export function DeliveryDetailScreen() {

@@ -1,3 +1,13 @@
+// ============================================================
+// colors — Uygulamanın tek renk kaynağı.
+//
+// Tüm ekranlar rengi buradan alır; hiçbir dosyada doğrudan '#2271C4'
+// gibi bir değer yazılmaz. Böylece tema tek yerden değiştirilebilir.
+//
+// blueTint10, borderLight50 gibi isimlerdeki sayı şeffaflık oranıdır
+// (blueTint10 = %10 opaklıkta Yeditepe mavisi).
+// ============================================================
+
 export const colors = {
   yeditepeBlue: '#2271C4',
 

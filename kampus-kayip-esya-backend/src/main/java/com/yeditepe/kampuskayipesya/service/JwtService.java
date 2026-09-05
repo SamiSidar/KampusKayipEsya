@@ -16,6 +16,16 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * JwtService — JWT token üretimi ve doğrulaması.
+ *
+ * Token'ın içinde kullanıcının id'si ve rolü taşınır; böylece her istekte
+ * veritabanına sormaya gerek kalmaz.
+ *
+ * İki tür token vardır:
+ * - Access token  : kısa ömürlü (15 dk), her istekte gönderilir
+ * - Refresh token : uzun ömürlü (7 gün), access token bitince yenisini alır
+ */
 @Service
 public class JwtService {
 

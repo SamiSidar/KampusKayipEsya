@@ -18,6 +18,17 @@ import { useAuth } from '../context/AuthContext';
 import { deliveriesService } from '../services/deliveriesService';
 import { DeliveryRecord } from '../types/delivery';
 import { FoundItemCategory, getFoundItemCategoryLabel } from '../types/foundItem';
+import { ImageWithFallback } from '../components/ImageWithFallback';
+
+// ============================================================
+// DeliveredItemsScreen — Geçmiş teslim kayıtları (admin).
+//
+// Ne yapar:
+// - Tamamlanmış teslimleri listeler (arşiv görünümü)
+// - Karta basılınca teslim detayına gider
+//
+// Kullandığı servis: deliveriesService.getDeliveries()
+// ============================================================
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -78,7 +89,7 @@ export function DeliveredItemsScreen() {
         data={deliveries}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item: delivery }) => (
-          <Pressable accessibilityRole="button"
+          <Pressable
             style={styles.itemCard}
             onPress={() =>
               navigation.navigate('DeliveryDetail', { deliveryId: delivery.id })
@@ -86,11 +97,19 @@ export function DeliveredItemsScreen() {
             accessibilityLabel={`${delivery.item.title} teslim detayı`}
           >
             <View style={styles.iconPanel}>
-              <MaterialCommunityIcons
-                name={getCategoryIcon(delivery.item.category)}
-                size={29}
-                color={colors.yeditepeBlue}
-              />
+              {delivery.item.imageUrl ? (
+                <ImageWithFallback
+                  source={{ uri: delivery.item.imageUrl }}
+                  style={styles.thumbnailImage}
+                  fallbackIconSize={29}
+                />
+              ) : (
+                <MaterialCommunityIcons
+                  name={getCategoryIcon(delivery.item.category)}
+                  size={29}
+                  color={colors.yeditepeBlue}
+                />
+              )}
             </View>
 
             <View style={styles.verticalDivider} />
@@ -131,7 +150,7 @@ export function DeliveredItemsScreen() {
               </View>
 
               <View style={styles.actionRow}>
-                <Pressable accessibilityRole="button"
+                <Pressable
                   style={styles.detailButton}
                   onPress={() =>
                     navigation.navigate('DeliveryDetail', { deliveryId: delivery.id })
@@ -198,6 +217,11 @@ const styles = StyleSheet.create({
     width: 72, height: 112, borderRadius: 18,
     backgroundColor: colors.blueTint10,
     alignItems: 'center', justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  thumbnailImage: {
+    width: '100%',
+    height: '100%',
   },
   verticalDivider: {
     width: 1, backgroundColor: colors.borderLight45, marginHorizontal: 13, borderRadius: 1,

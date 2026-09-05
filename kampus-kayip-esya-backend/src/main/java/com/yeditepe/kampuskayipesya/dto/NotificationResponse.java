@@ -3,6 +3,9 @@ package com.yeditepe.kampuskayipesya.dto;
 import com.yeditepe.kampuskayipesya.enums.NotificationType;
 import java.time.LocalDateTime;
 
+/**
+ * Dışarıya döndürülen bildirim bilgisi.
+ */
 public class NotificationResponse {
 
     private Long id;

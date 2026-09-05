@@ -5,6 +5,9 @@ import com.yeditepe.kampuskayipesya.enums.FoundItemStatus;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * Dışarıya döndürülen bulunan eşya bilgisi.
+ */
 public class FoundItemResponse {
 
     private Long id;

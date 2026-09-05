@@ -3,6 +3,15 @@ package com.yeditepe.kampuskayipesya.enums;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Teslim talebinin durumu.
+ *
+ * PENDING        : admin incelemesi bekliyor
+ * INFO_REQUESTED : adminden ek bilgi istendi
+ * APPROVED       : onaylandı, teslim kaydı oluşturulabilir
+ * REJECTED       : reddedildi
+ * COMPLETED      : eşya teslim edildi, talep kapandı
+ */
 public enum ClaimRequestStatus {
     PENDING,
     INFO_REQUESTED,

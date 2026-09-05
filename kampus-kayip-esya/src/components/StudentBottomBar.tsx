@@ -6,6 +6,13 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
 import { RootStackParamList } from '../navigation/types';
 
+// ============================================================
+// StudentBottomBar — Öğrenci alt menüsü.
+//
+// Dört sekme: Ana Sayfa / İlanlar / Bildirilerim / Profil.
+// activeTab prop'u hangi sekmenin seçili görüneceğini belirler.
+// ============================================================
+
 type StudentTab = 'home' | 'listings' | 'reports' | 'profile';
 
 type StudentBottomBarProps = {
@@ -59,7 +66,7 @@ type TabButtonProps = {
 
 function TabButton({ label, icon, active, onPress }: TabButtonProps) {
   return (
-    <Pressable accessibilityRole="button" style={styles.tab} onPress={onPress} accessibilityLabel={label}>
+    <Pressable style={styles.tab} onPress={onPress} accessibilityLabel={label}>
       <Ionicons
         name={icon}
         size={27}
@@ -110,4 +117,4 @@ const styles = StyleSheet.create({
     color: colors.yeditepeBlue,
     fontWeight: '800',
   },
-});
+});

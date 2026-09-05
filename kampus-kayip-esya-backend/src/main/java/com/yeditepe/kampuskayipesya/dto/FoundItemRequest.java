@@ -4,6 +4,12 @@ import com.yeditepe.kampuskayipesya.enums.FoundItemCategory;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * Bulunan eşya oluşturma/güncelleme isteği.
+ *
+ * @NotBlank / @NotNull işaretleri sayesinde zorunlu alanlar boş gelirse
+ * Spring isteği daha controller'a girmeden reddeder.
+ */
 public class FoundItemRequest {
 
     @NotBlank(message = "Başlık boş olamaz")

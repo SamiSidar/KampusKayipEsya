@@ -3,6 +3,13 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 
+// ============================================================
+// EmptyState — Liste boşken gösterilen ortak bileşen.
+//
+// İkon, başlık ve açıklama alır. Her ekranda ayrı boş-liste tasarımı
+// yazmak yerine bu bileşen kullanılır.
+// ============================================================
+
 type EmptyStateProps = {
   icon?: keyof typeof Ionicons.glyphMap;
   title: string;

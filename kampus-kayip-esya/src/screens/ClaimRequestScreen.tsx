@@ -6,7 +6,6 @@ import {
   ScrollView,
   TextInput,
   Pressable,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,11 +19,24 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
 import { AppHeader } from '../components/AppHeader';
 import { StudentBottomBar } from '../components/StudentBottomBar';
+import { InlineError } from '../components/InlineError';
 import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../context/AuthContext';
 import { foundItemsService } from '../services/foundItemsService';
 import { claimRequestsService } from '../services/claimRequestsService';
 import { FoundItem, getFoundItemStatusLabel } from '../types/foundItem';
+
+// ============================================================
+// ClaimRequestScreen — Teslim talebi oluşturur (öğrenci).
+//
+// Ne yapar:
+// - Öğrenciden eşyanın kendisine ait olduğunu kanıtlayacak bilgileri ister
+// - Özellikle 'ayırt edici özellik' alanı önemlidir: admin bu beyanı
+//   eşyanın gerçek sahibini doğrulamak için kullanır
+// - Talep gönderildikten sonra admin onayına düşer
+//
+// Kullandığı servis: claimRequestsService.createClaimRequest()
+// ============================================================
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type ClaimRequestRouteProp = RouteProp<RootStackParamList, 'ClaimRequest'>;
@@ -42,6 +54,7 @@ export function ClaimRequestScreen() {
   const [distinguishingFeature, setDistinguishingFeature] = useState('');
   const [additionalNote, setAdditionalNote] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     loadItem();
@@ -52,8 +65,7 @@ export function ClaimRequestScreen() {
       const data = await foundItemsService.getFoundItemById(itemId, token);
       setItem(data);
     } catch (error: any) {
-      const message = error?.message || 'Talep gönderilemedi. Tekrar deneyin.';
-      Alert.alert('Hata', message);
+      setErrorMessage(error?.message || 'Eşya bilgisi yüklenemedi. Tekrar deneyin.');
       console.error('Talep hatası:', error);
     } finally {
       setIsLoadingItem(false);
@@ -62,9 +74,11 @@ export function ClaimRequestScreen() {
 
   async function handleSubmit() {
     if (!description.trim() || !distinguishingFeature.trim()) {
-      Alert.alert('Hata', 'Lütfen zorunlu alanları doldurun.');
+      setErrorMessage('Lütfen zorunlu alanları doldurun.');
       return;
     }
+
+    setErrorMessage('');
 
     try {
       setIsSubmitting(true);
@@ -83,8 +97,8 @@ export function ClaimRequestScreen() {
           routes: [{ name: 'Success' }],
         })
       );
-    } catch (error) {
-      Alert.alert('Hata', 'Talep gönderilemedi. Tekrar deneyin.');
+    } catch (error: any) {
+      setErrorMessage(error?.message || 'Talep gönderilemedi. Tekrar deneyin.');
       console.error('Talep hatası:', error);
     } finally {
       setIsSubmitting(false);
@@ -194,7 +208,7 @@ export function ClaimRequestScreen() {
             </Text>
           </View>
 
-          <Pressable accessibilityRole="button"
+          <Pressable
             style={[
               styles.submitButton,
               isSubmitting && { opacity: 0.7 },
@@ -210,6 +224,8 @@ export function ClaimRequestScreen() {
               <Text style={styles.submitButtonText}>Talebi Gönder</Text>
             )}
           </Pressable>
+
+          <InlineError message={errorMessage} />
         </View>
       </ScrollView>
 
@@ -373,4 +389,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '800',
   },
-});
+});

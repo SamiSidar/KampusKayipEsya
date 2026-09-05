@@ -154,10 +154,17 @@ async function request<T>(
     }
 
     if (!response.ok) {
+      // Validation hatalarında data alanından alan bazlı hataları oku
+      let errorMessage = json?.message || `İstek başarısız oldu. HTTP durum kodu: ${response.status}`;
+      if (json?.data && typeof json.data === 'object' && !Array.isArray(json.data)) {
+        const fieldErrors = Object.values(json.data).filter((v): v is string => typeof v === 'string');
+        if (fieldErrors.length > 0) {
+          errorMessage = fieldErrors[0];
+        }
+      }
+
       const error: ApiErrorResponse = {
-        message:
-          json?.message ||
-          `İstek başarısız oldu. HTTP durum kodu: ${response.status}`,
+        message: errorMessage,
         status: response.status,
         path: endpoint,
       };

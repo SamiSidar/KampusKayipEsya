@@ -142,7 +142,11 @@ export function EmailVerificationScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Pressable accessibilityRole="button" style={styles.headerSide} onPress={() => navigation.goBack()} accessibilityLabel="Geri dön">
+        <Pressable
+          style={styles.headerSide}
+          onPress={() => navigation.goBack()}
+          accessibilityLabel="Geri dön"
+        >
           <Ionicons name="arrow-back" size={24} color={colors.white} />
         </Pressable>
         <Text style={styles.headerTitle}>Email Doğrulama</Text>
@@ -205,8 +209,12 @@ export function EmailVerificationScreen() {
             </View>
 
             {/* Verify button */}
-            <Pressable accessibilityRole="button"
-              style={[styles.verifyButton, isLoading && styles.buttonDisabled]}
+            <Pressable
+              style={({ pressed }) => [
+                styles.verifyButton,
+                isLoading && styles.buttonDisabled,
+                pressed && styles.buttonPressed,
+              ]}
               onPress={handleVerify}
               disabled={isLoading}
               accessibilityState={{ disabled: isLoading }}
@@ -225,8 +233,12 @@ export function EmailVerificationScreen() {
             {/* Resend */}
             <View style={styles.resendContainer}>
               <Text style={styles.resendLabel}>Kod gelmedi mi?</Text>
-              <Pressable accessibilityRole="button" onPress={handleResend} disabled={resendCooldown > 0 || isResending} accessibilityLabel="Kodu tekrar gönder">
-              accessibilityState={{ disabled: resendCooldown > 0 || isResending }}
+              <Pressable
+                onPress={handleResend}
+                disabled={resendCooldown > 0 || isResending}
+                accessibilityState={{ disabled: resendCooldown > 0 || isResending }}
+                accessibilityLabel="Kodu tekrar gönder"
+              >
                 {isResending ? (
                   <ActivityIndicator color={colors.yeditepeBlue} size="small" />
                 ) : (
@@ -245,7 +257,11 @@ export function EmailVerificationScreen() {
             </View>
 
             {/* Login link */}
-            <Pressable accessibilityRole="button" style={styles.loginLink} onPress={() => navigation.navigate('Login')} accessibilityLabel="Giriş yap sayfasına git">
+            <Pressable
+              style={styles.loginLink}
+              onPress={() => navigation.navigate('Login')}
+              accessibilityLabel="Giriş yap sayfasına git"
+            >
               <Text style={styles.loginLinkText}>
                 Zaten doğruladınız mı? <Text style={styles.loginLinkBold}>Giriş Yap</Text>
               </Text>
@@ -276,7 +292,7 @@ const styles = StyleSheet.create({
   },
   headerSide: {
     width: 48,
-    height: '100%',
+    minHeight: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -392,6 +408,9 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.7,
   },
+  buttonPressed: {
+    opacity: 0.85,
+  },
   verifyButtonText: {
     color: colors.white,
     fontSize: 15.5,
@@ -419,7 +438,9 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     marginTop: 18,
+    minHeight: 44,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   loginLinkText: {
     fontSize: 13.5,

@@ -2,6 +2,9 @@ package com.yeditepe.kampuskayipesya.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
+/**
+ * Access token süresi dolduğunda yenisini almak için kullanılan istek.
+ */
 public class RefreshTokenRequest {
 
     @NotBlank(message = "Refresh token boş olamaz")

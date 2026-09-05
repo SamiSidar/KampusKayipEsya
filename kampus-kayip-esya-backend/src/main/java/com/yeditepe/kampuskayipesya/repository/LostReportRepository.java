@@ -8,6 +8,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * LostReportRepository — Kayıp bildirisi sorguları.
+ *
+ * Öğrencinin kendi bildirileri ve duruma göre filtreleme için kullanılır.
+ */
 @Repository
 public interface LostReportRepository extends JpaRepository<LostReport, Long> {
 

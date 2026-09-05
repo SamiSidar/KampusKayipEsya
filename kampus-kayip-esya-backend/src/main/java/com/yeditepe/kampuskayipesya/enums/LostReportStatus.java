@@ -3,6 +3,16 @@ package com.yeditepe.kampuskayipesya.enums;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Kayıp bildirisinin durumu.
+ *
+ * PENDING_REVIEW     : admin onayı bekliyor
+ * REVISION_REQUESTED : adminden düzeltme istendi
+ * APPROVED           : onaylandı, aktif listede
+ * MATCH_FOUND        : benzer bir bulunan eşya ile eşleştirildi
+ * REJECTED           : reddedildi
+ * CLOSED             : kapatıldı
+ */
 public enum LostReportStatus {
     PENDING_REVIEW,
     REVISION_REQUESTED,

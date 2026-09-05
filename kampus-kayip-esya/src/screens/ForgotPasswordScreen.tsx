@@ -16,6 +16,16 @@ import { AppHeader } from '../components/AppHeader';
 import { RootStackParamList } from '../navigation/types';
 import { authService } from '../services/authService';
 
+// ============================================================
+// ForgotPasswordScreen — Şifre sıfırlama isteği.
+//
+// Ne yapar:
+// - Yeditepe uzantılı e-posta adresi alır
+// - Backend'e sıfırlama bağlantısı gönderme isteği atar
+//
+// Kullandığı servis: authService.forgotPassword()
+// ============================================================
+
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export function ForgotPasswordScreen() {
@@ -114,7 +124,7 @@ export function ForgotPasswordScreen() {
             </View>
           </View>
 
-          <Pressable accessibilityRole="button"
+          <Pressable
             style={[styles.primaryButton, isLoading && styles.buttonDisabled]}
             onPress={handleSubmit}
             disabled={isLoading}
@@ -128,7 +138,7 @@ export function ForgotPasswordScreen() {
             )}
           </Pressable>
 
-          <Pressable accessibilityRole="button" style={styles.loginLink} onPress={() => navigation.navigate('Login')} accessibilityLabel="Giriş yap sayfasına git">
+          <Pressable style={styles.loginLink} onPress={() => navigation.navigate('Login')} accessibilityLabel="Giriş yap sayfasına git">
             <Text style={styles.loginLinkText}>
               Şifrenizi hatırlıyor musunuz? <Text style={styles.loginLinkBold}>Giriş Yap</Text>
             </Text>

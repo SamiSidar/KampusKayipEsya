@@ -18,6 +18,14 @@ import java.nio.file.StandardCopyOption;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * FileStorageService — Yüklenen dosyaları diske kaydeder.
+ *
+ * Güvenlik önlemleri:
+ * - Dosya adı sunucuda yeniden üretilir (kullanıcının verdiği ad kullanılmaz)
+ * - Böylece '../../etc/passwd' gibi dizin dışına çıkma saldırıları engellenir
+ * - Sadece izin verilen dosya türleri kabul edilir
+ */
 @Service
 public class FileStorageService {
 
@@ -58,6 +66,17 @@ public class FileStorageService {
         }
 
         String contentType = file.getContentType();
+        // Web blob upload bazen content type gondermez - dosya uzantisindan cikar
+        if (contentType == null || "application/octet-stream".equals(contentType)) {
+            String origName = file.getOriginalFilename();
+            if (origName != null) {
+                String lowerName = origName.toLowerCase();
+                if (lowerName.endsWith(".png")) contentType = "image/png";
+                else if (lowerName.endsWith(".webp")) contentType = "image/webp";
+                else if (lowerName.endsWith(".gif")) contentType = "image/gif";
+                else if (lowerName.endsWith(".jpg") || lowerName.endsWith(".jpeg")) contentType = "image/jpeg";
+            }
+        }
         if (contentType == null || !ALLOWED_TYPES.contains(contentType)) {
             throw new BadRequestException("Sadece JPEG, PNG, WebP ve GIF dosyaları yüklenebilir.");
         }

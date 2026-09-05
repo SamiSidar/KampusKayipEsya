@@ -4,6 +4,9 @@ import com.yeditepe.kampuskayipesya.enums.FoundItemCategory;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * Kayıp bildirisi oluşturma/güncelleme isteği.
+ */
 public class LostReportRequest {
 
     @NotBlank(message = "Başlık boş olamaz")

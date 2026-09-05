@@ -52,7 +52,7 @@ public class RefreshToken {
         return LocalDateTime.now().isAfter(this.expiresAt);
     }
 
-    // ==================== GETTER ve SETTER ====================
+
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

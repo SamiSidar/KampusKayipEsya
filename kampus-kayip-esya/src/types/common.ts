@@ -1,3 +1,11 @@
+// ============================================================
+// Ortak tipler — birden fazla yerde tekrarlanan temel tanımlar.
+//
+// ApiId / ApiDateString gibi takma adlar (alias) kodun okunmasını
+// kolaylaştırır: 'string' yerine 'ApiDateString' görünce bunun backend'den
+// gelen bir tarih metni olduğu anlaşılır.
+// ============================================================
+
 export type ApiId = number;
 
 export type ApiDateString = string;

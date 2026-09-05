@@ -4,6 +4,9 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+/**
+ * E-posta doğrulama isteği: e-posta ve 6 haneli kod.
+ */
 public class VerifyEmailRequest {
 
     @NotBlank(message = "Email boş olamaz")

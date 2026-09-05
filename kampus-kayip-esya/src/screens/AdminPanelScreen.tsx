@@ -17,6 +17,18 @@ import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../context/AuthContext';
 import { dashboardService, DashboardStats } from '../services/dashboardService';
 
+// ============================================================
+// AdminPanelScreen — Yöneticinin ana ekranı.
+//
+// Ne yapar:
+// - Backend'den özet istatistikleri çeker (onay bekleyen, sahibi bekleyen,
+//   aktif kayıp, teslim edilen sayıları)
+// - Her sayıyı tıklanabilir bir kart olarak gösterir
+// - Karta basılınca ilgili liste ekranına yönlendirir
+//
+// Kullandığı servis: dashboardService.getStats()
+// ============================================================
+
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export function AdminPanelScreen() {
@@ -111,7 +123,7 @@ export function AdminPanelScreen() {
         ) : (
           <View style={styles.grid}>
             {adminCards.map(card => (
-              <Pressable accessibilityRole="button"
+              <Pressable
                 key={card.id}
                 style={styles.dashboardCard}
                 onPress={() => handleCardPress(card.id)}
@@ -269,4 +281,4 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: colors.yeditepeBlue,
   },
-});
+});

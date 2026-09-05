@@ -3,6 +3,12 @@ package com.yeditepe.kampuskayipesya.dto;
 import com.yeditepe.kampuskayipesya.enums.LostReportStatus;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * Admin'in kayıp bildirisi kararı.
+ *
+ * Tek endpoint ile onay/red/düzeltme yapılır; hangisi olduğu status
+ * alanıyla belirtilir.
+ */
 public class ReportReviewRequest {
 
     @NotNull(message = "Durum boş olamaz")

@@ -7,6 +7,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * NotificationRepository — Bildirim sorguları.
+ *
+ * Okunmamış bildirimleri saymak ve kullanıcıya göre listelemek için kullanılır.
+ */
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
 

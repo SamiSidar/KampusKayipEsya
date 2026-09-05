@@ -2,6 +2,12 @@ package com.yeditepe.kampuskayipesya.dto;
 
 import java.time.LocalDateTime;
 
+/**
+ * Tüm endpoint'lerin döndürdüğü ortak zarf (wrapper).
+ *
+ * Yapı: { success, message, data }
+ * Frontend her yanıtı aynı şekilde ayrıştırabilsin diye kullanılır.
+ */
 public class ApiResponse<T> {
 
     private boolean success;

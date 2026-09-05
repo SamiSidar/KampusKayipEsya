@@ -3,6 +3,13 @@ import { FoundItem } from './foundItem';
 import { ClaimRequest } from './claimRequest';
 import { UserSummary } from './user';
 
+// ============================================================
+// Teslim kaydı tipleri.
+//
+// Bir teslim kaydı, onaylanmış bir teslim talebinin fiziksel olarak
+// tamamlandığını belgeler.
+// ============================================================
+
 // Backend'den dönen DeliveryResponse yapısı
 export type DeliveryRecord = {
   id: ApiId;

@@ -3,6 +3,11 @@ package com.yeditepe.kampuskayipesya.exception;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+/**
+ * Aynı kayıt zaten varsa fırlatılır → HTTP 409.
+ *
+ * Örnek: kayıtlı bir e-posta ile tekrar kayıt olma denemesi.
+ */
 @ResponseStatus(HttpStatus.CONFLICT)
 public class DuplicateResourceException extends RuntimeException {
 

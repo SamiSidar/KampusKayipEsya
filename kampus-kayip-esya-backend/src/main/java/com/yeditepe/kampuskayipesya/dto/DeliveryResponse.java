@@ -2,6 +2,9 @@ package com.yeditepe.kampuskayipesya.dto;
 
 import java.time.LocalDateTime;
 
+/**
+ * Dışarıya döndürülen teslim kaydı bilgisi.
+ */
 public class DeliveryResponse {
 
     private Long id;

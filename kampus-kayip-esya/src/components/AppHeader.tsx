@@ -8,6 +8,16 @@ import { RootStackParamList } from '../navigation/types';
 import { useAuth } from '../context/AuthContext';
 import { notificationsService } from '../services/notificationsService';
 
+// ============================================================
+// AppHeader — Ekranların üstündeki mavi başlık çubuğu.
+//
+// Ne yapar:
+// - Başlık metnini ortalar
+// - İsteğe bağlı geri butonu ve bildirim zili gösterir
+// - Bildirim zilinde okunmamış sayısını rozet olarak gösterir
+//   (30 saniyede bir arka planda güncellenir)
+// ============================================================
+
 type AppHeaderProps = {
   title: string;
   showBack?: boolean;
@@ -64,7 +74,7 @@ export function AppHeader({
     <View style={styles.header}>
       <View style={styles.side}>
         {showBack ? (
-          <Pressable accessibilityRole="button" style={styles.iconButton} onPress={handleBackPress} accessibilityLabel="Geri dön">
+          <Pressable style={styles.iconButton} onPress={handleBackPress} accessibilityLabel="Geri dön">
             <Ionicons name="chevron-back" size={27} color={colors.white} />
           </Pressable>
         ) : null}
@@ -76,7 +86,7 @@ export function AppHeader({
 
       <View style={styles.side}>
         {showNotification ? (
-          <Pressable accessibilityRole="button"
+          <Pressable
             style={styles.rightIconButton}
             onPress={handleNotificationPress}
             accessibilityLabel="Bildirimler"

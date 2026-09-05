@@ -3,6 +3,9 @@ package com.yeditepe.kampuskayipesya.dto;
 import com.yeditepe.kampuskayipesya.enums.ClaimRequestStatus;
 import java.time.LocalDateTime;
 
+/**
+ * Dışarıya döndürülen teslim talebi bilgisi (eşya ve öğrenci dahil).
+ */
 public class ClaimRequestResponse {
 
     private Long id;

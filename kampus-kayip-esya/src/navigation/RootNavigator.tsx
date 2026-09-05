@@ -29,12 +29,24 @@ import { WaitingOwnerItemsScreen } from '../screens/WaitingOwnerItemsScreen';
 import { ActiveLostReportsScreen } from '../screens/ActiveLostReportsScreen';
 import { DeliveredItemsScreen } from '../screens/DeliveredItemsScreen';
 import { DeliveryDetailScreen } from '../screens/DeliveryDetailScreen';
+import { DeliveryCreationScreen } from '../screens/DeliveryCreationScreen';
 import { AdminItemDetailScreen } from '../screens/AdminItemDetailScreen';
 import { AdminClaimRequestDetailScreen } from '../screens/AdminClaimRequestDetailScreen';
 import { RevisionRequestScreen } from '../screens/RevisionRequestScreen';
 import { FoundItemCreateScreen } from '../screens/FoundItemCreateScreen';
 import { AdminReviewScreen } from '../screens/AdminReviewScreen';
 import { AdminProfileScreen } from '../screens/AdminProfileScreen';
+
+// ============================================================
+// RootNavigator — Uygulamadaki tüm ekranların kaydı.
+//
+// Tek bir stack (yığın) navigator kullanılır; ekranlar üst üste açılır.
+// Sekmeler ayrı bir navigator değil, StudentBottomBar / AdminBottomBar
+// bileşenleriyle elle yapılır.
+//
+// İlk açılan ekran Splash'tir; Splash kullanıcının giriş durumuna ve
+// rolüne bakıp doğru ekrana yönlendirir.
+// ============================================================
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -85,6 +97,7 @@ export function RootNavigator() {
         />
         <Stack.Screen name="DeliveredItems" component={DeliveredItemsScreen} />
         <Stack.Screen name="DeliveryDetail" component={DeliveryDetailScreen} />
+        <Stack.Screen name="DeliveryCreation" component={DeliveryCreationScreen} />
         <Stack.Screen name="AdminItemDetail" component={AdminItemDetailScreen} />
         <Stack.Screen
           name="AdminClaimRequestDetail"

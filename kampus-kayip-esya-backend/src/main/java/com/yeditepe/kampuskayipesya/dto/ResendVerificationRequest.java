@@ -3,6 +3,9 @@ package com.yeditepe.kampuskayipesya.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+/**
+ * Doğrulama kodunu yeniden gönderme isteği: sadece e-posta.
+ */
 public class ResendVerificationRequest {
 
     @NotBlank(message = "Email boş olamaz")

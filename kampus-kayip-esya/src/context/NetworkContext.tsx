@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated, Platform } from 'react-native';
 import { colors } from '../theme/colors';
 
 /**
@@ -44,7 +44,25 @@ export function NetworkProvider({ children }: { children: ReactNode }) {
     // });
     // return () => unsubscribe();
 
-    // Geçici: fetch tabanlı basit kontrol
+    // Web: navigator.onLine kullan (CORS sorunu olmaz)
+    // Mobil: fetch ile backend'e ping at
+    if (Platform.OS === 'web') {
+      const update = () => {
+        setState({
+          isConnected: navigator.onLine,
+          isInternetReachable: navigator.onLine,
+        });
+      };
+      update();
+      window.addEventListener('online', update);
+      window.addEventListener('offline', update);
+      return () => {
+        window.removeEventListener('online', update);
+        window.removeEventListener('offline', update);
+      };
+    }
+
+    // Mobil: fetch tabanlı kontrol
     const checkConnection = async () => {
       try {
         const controller = new AbortController();

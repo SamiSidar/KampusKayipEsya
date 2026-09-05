@@ -18,6 +18,16 @@ import { useAuth } from '../context/AuthContext';
 import { notificationsService } from '../services/notificationsService';
 import { AppNotification, NotificationType } from '../types/notification';
 
+// ============================================================
+// NotificationsScreen — Bildirim listesi.
+//
+// Ne yapar:
+// - Kullanıcıya gelen bildirimleri listeler, okunmamışları vurgular
+// - Bildirime basılınca okundu olarak işaretler ve ilgili kayda yönlendirir
+//
+// Kullandığı servis: notificationsService
+// ============================================================
+
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 function getNotificationVisual(type: NotificationType) {
@@ -118,7 +128,7 @@ export function NotificationsScreen() {
           const unread = !notification.read;
 
           return (
-            <Pressable accessibilityRole="button"
+            <Pressable
               style={[
                 styles.notificationCard,
                 unread && styles.unreadCard,
@@ -343,4 +353,4 @@ const styles = StyleSheet.create({
   chevron: {
     marginLeft: 8,
   },
-});
+});

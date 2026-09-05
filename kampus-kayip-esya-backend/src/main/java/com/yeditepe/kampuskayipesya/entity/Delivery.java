@@ -3,6 +3,12 @@ package com.yeditepe.kampuskayipesya.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * Delivery — Teslim kaydı tablosu (deliveries).
+ *
+ * Onaylanmış bir teslim talebinin fiziksel olarak tamamlandığını belgeler.
+ * Kim aldı, kim teslim etti ve ne zaman bilgisini saklar.
+ */
 @Entity
 @Table(name = "deliveries")
 public class Delivery {

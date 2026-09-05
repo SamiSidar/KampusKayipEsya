@@ -3,6 +3,11 @@ package com.yeditepe.kampuskayipesya.dto;
 import com.yeditepe.kampuskayipesya.enums.UserRole;
 import java.time.LocalDateTime;
 
+/**
+ * Dışarıya döndürülen kullanıcı bilgisi.
+ *
+ * ÖNEMLİ: Şifre alanı bilerek yoktur — entity yerine bu DTO döndürülür.
+ */
 public class UserResponse {
 
     private Long id;

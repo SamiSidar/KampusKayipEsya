@@ -18,6 +18,17 @@ import { useAuth } from '../context/AuthContext';
 import { lostReportsService } from '../services/lostReportsService';
 import { LostReport } from '../types/lostReport';
 import { FoundItemCategory, getFoundItemCategoryLabel } from '../types/foundItem';
+import { ImageWithFallback } from '../components/ImageWithFallback';
+
+// ============================================================
+// PendingReportsScreen — Onay bekleyen kayıp bildirileri listesi (admin).
+//
+// Ne yapar:
+// - Durumu PENDING_REVIEW olan bildirileri listeler
+// - Karta veya 'İncele' butonuna basılınca AdminReview ekranına gider
+//
+// Kullandığı servis: lostReportsService.getLostReports()
+// ============================================================
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -95,17 +106,25 @@ export function PendingReportsScreen() {
         data={reports}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item: report }) => (
-          <Pressable accessibilityRole="button"
+          <Pressable
             style={styles.reportCard}
             onPress={() => goToReview(report.id)}
             accessibilityLabel={`${report.title} bildiri incele`}
           >
             <View style={styles.iconPanel}>
-              <MaterialCommunityIcons
-                name={getCategoryIcon(report.category)}
-                size={29}
-                color={colors.yeditepeBlue}
-              />
+              {report.imageUrl ? (
+                <ImageWithFallback
+                  source={{ uri: report.imageUrl }}
+                  style={styles.thumbnailImage}
+                  fallbackIconSize={29}
+                />
+              ) : (
+                <MaterialCommunityIcons
+                  name={getCategoryIcon(report.category)}
+                  size={29}
+                  color={colors.yeditepeBlue}
+                />
+              )}
             </View>
 
             <View style={styles.verticalDivider} />
@@ -150,7 +169,7 @@ export function PendingReportsScreen() {
               </View>
 
               <View style={styles.actionRow}>
-                <Pressable accessibilityRole="button"
+                <Pressable
                   style={styles.reviewButton}
                   onPress={() => goToReview(report.id)}
                   accessibilityLabel={`${report.title} incele`}
@@ -253,6 +272,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.blueTint10,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  thumbnailImage: {
+    width: '100%',
+    height: '100%',
   },
   verticalDivider: {
     width: 1,
@@ -336,4 +360,4 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     fontWeight: '800',
   },
-});
+});

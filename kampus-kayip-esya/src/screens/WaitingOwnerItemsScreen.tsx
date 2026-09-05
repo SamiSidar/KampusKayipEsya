@@ -20,6 +20,16 @@ import { foundItemsService } from '../services/foundItemsService';
 import { FoundItem, getFoundItemCategoryLabel, getFoundItemStatusLabel } from '../types/foundItem';
 import { ImageWithFallback } from '../components/ImageWithFallback';
 
+// ============================================================
+// WaitingOwnerItemsScreen — Sahibi bekleyen bulunan eşyalar (admin).
+//
+// Ne yapar:
+// - Durumu WAITING_OWNER olan eşyaları listeler
+// - Karta basılınca eşya detayına (AdminItemDetail) gider
+//
+// Kullandığı servis: foundItemsService.getByStatus()
+// ============================================================
+
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export function WaitingOwnerItemsScreen() {
@@ -68,7 +78,7 @@ export function WaitingOwnerItemsScreen() {
         data={items}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
-          <Pressable accessibilityRole="button"
+          <Pressable
             style={styles.itemCard}
             onPress={() =>
               navigation.navigate('AdminItemDetail', { itemId: item.id })
@@ -105,7 +115,7 @@ export function WaitingOwnerItemsScreen() {
               </View>
 
               <View style={styles.actionRow}>
-                <Pressable accessibilityRole="button"
+                <Pressable
                   style={styles.primaryAction}
                   onPress={() =>
                     navigation.navigate('AdminItemDetail', { itemId: item.id })
@@ -335,4 +345,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 30,
   },
-});
+});

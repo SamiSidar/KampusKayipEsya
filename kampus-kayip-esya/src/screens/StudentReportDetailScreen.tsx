@@ -18,6 +18,18 @@ import { useAuth } from '../context/AuthContext';
 import { lostReportsService } from '../services/lostReportsService';
 import { LostReport, getLostReportStatusLabel } from '../types/lostReport';
 import { getFoundItemCategoryLabel } from '../types/foundItem';
+import { ImageWithFallback } from '../components/ImageWithFallback';
+
+// ============================================================
+// StudentReportDetailScreen — Öğrencinin bildiri detayı.
+//
+// Ne yapar:
+// - Bildirinin durumunu ve varsa admin notunu gösterir
+// - Eşleşen eşya bulunduysa o eşyaya giden bir bağlantı sunar
+// - Admin düzeltme istediyse 'Düzenle' butonuyla bildiriyi güncellemeye izin verir
+//
+// Kullandığı servis: lostReportsService.getLostReportById()
+// ============================================================
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type StudentReportDetailRouteProp = RouteProp<
@@ -153,6 +165,20 @@ export function StudentReportDetailScreen() {
           <Text style={styles.descriptionText}>{report.description}</Text>
         </View>
 
+        {/* Eşya Görseli */}
+        {report.imageUrl ? (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>Eşya Görseli</Text>
+            <View style={styles.imageContainer}>
+              <ImageWithFallback
+                source={{ uri: report.imageUrl }}
+                style={styles.reportImage}
+                fallbackIconSize={48}
+              />
+            </View>
+          </View>
+        ) : null}
+
         {/* Eşleşme kartı */}
         {hasMatch && report.matchedItem ? (
           <View style={styles.matchCard}>
@@ -189,7 +215,7 @@ export function StudentReportDetailScreen() {
                 />
               </View>
 
-              <Pressable accessibilityRole="button"
+              <Pressable
                 style={styles.primaryButton}
                 onPress={() =>
                   navigation.navigate('ItemDetail', {
@@ -217,6 +243,45 @@ export function StudentReportDetailScreen() {
             <View style={styles.noteTextBlock}>
               <Text style={styles.noteTitle}>Admin Notu</Text>
               <Text style={styles.noteText}>{report.adminNote}</Text>
+            </View>
+          </View>
+        ) : null}
+
+        {/* Düzenleme İsteği Kartı */}
+        {report.status === 'REVISION_REQUESTED' && report.revisionNote ? (
+          <View style={styles.revisionCard}>
+            <View style={styles.revisionIconBox}>
+              <MaterialCommunityIcons
+                name="pencil-outline"
+                size={28}
+                color={colors.yeditepeBlue}
+              />
+            </View>
+            <View style={styles.revisionTextBlock}>
+              <Text style={styles.revisionTitle}>Düzenleme İsteği</Text>
+              <Text style={styles.revisionDescription}>
+                Admin bildirinizde bazı düzeltmeler yapmanızı istiyor:
+              </Text>
+              <View style={styles.revisionNoteBox}>
+                <Text style={styles.revisionNoteText}>{report.revisionNote}</Text>
+              </View>
+
+              <Pressable
+                style={styles.editButton}
+                onPress={() =>
+                  navigation.navigate('LostReport', {
+                    reportId: report.id,
+                  })
+                }
+                accessibilityLabel="Bildiriyi düzenle"
+              >
+                <MaterialCommunityIcons
+                  name="pencil-outline"
+                  size={16}
+                  color={colors.white}
+                />
+                <Text style={styles.editButtonText}>Bildiriyi Düzenle</Text>
+              </Pressable>
             </View>
           </View>
         ) : null}
@@ -413,6 +478,18 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: colors.textSecondary,
   },
+  imageContainer: {
+    width: '100%',
+    height: 220,
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: colors.surfaceLight,
+  },
+  reportImage: {
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
+  },
   matchCard: {
     backgroundColor: colors.card,
     borderRadius: 22,
@@ -527,4 +604,75 @@ const styles = StyleSheet.create({
     lineHeight: 19,
     color: colors.textSecondary,
   },
-});
+  revisionCard: {
+    backgroundColor: colors.card,
+    borderRadius: 22,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    shadowColor: colors.black,
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 5 },
+    elevation: 4,
+    borderWidth: 1.5,
+    borderColor: colors.yeditepeBlue,
+  },
+  revisionIconBox: {
+    width: 56,
+    height: 56,
+    borderRadius: 16,
+    backgroundColor: colors.blueTint10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 13,
+  },
+  revisionTextBlock: {
+    flex: 1,
+  },
+  revisionTitle: {
+    fontSize: 15.5,
+    fontWeight: '800',
+    color: colors.yeditepeBlue,
+    marginBottom: 5,
+  },
+  revisionDescription: {
+    fontSize: 12.8,
+    lineHeight: 19,
+    color: colors.textSecondary,
+    marginBottom: 10,
+  },
+  revisionNoteBox: {
+    backgroundColor: colors.surfaceLight,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.yeditepeBlue,
+  },
+  revisionNoteText: {
+    fontSize: 12.8,
+    lineHeight: 19,
+    color: colors.textPrimary,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.yeditepeBlue,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    gap: 6,
+    shadowColor: colors.yeditepeBlue,
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 3,
+  },
+  editButtonText: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: colors.white,
+  },
+});

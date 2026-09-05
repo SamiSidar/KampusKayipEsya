@@ -4,6 +4,15 @@ import com.yeditepe.kampuskayipesya.enums.ClaimRequestStatus;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * ClaimRequest — Teslim talebi tablosu (claim_requests).
+ *
+ * Öğrencinin 'bu eşya benim' talebidir.
+ *
+ * distinguishingFeature alanı kritiktir: öğrencinin eşyayı tanıdığını
+ * gösteren beyanıdır ve admin doğrulamayı buna bakarak yapar. Bu sayede
+ * eşyanın yanlış kişiye teslim edilmesi engellenir.
+ */
 @Entity
 @Table(name = "claim_requests", indexes = {
         @Index(name = "idx_claim_status", columnList = "status"),

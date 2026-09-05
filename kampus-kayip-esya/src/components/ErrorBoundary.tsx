@@ -45,7 +45,6 @@ export class ErrorBoundary extends Component<Props, State> {
           <TouchableOpacity
             style={styles.button}
             onPress={this.handleReset}
-            accessibilityRole="button"
             accessibilityLabel="Tekrar dene"
           >
             <Text style={styles.buttonText}>Tekrar Dene</Text>

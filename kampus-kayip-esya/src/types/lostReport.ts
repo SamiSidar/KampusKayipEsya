@@ -2,6 +2,17 @@ import { ApiDateString, ApiId } from './common';
 import { FoundItemCategory, FoundItem } from './foundItem';
 import { UserSummary } from './user';
 
+// ============================================================
+// Kayıp eşya bildirisi tipleri.
+//
+// Durum akışı:
+// PENDING_REVIEW → APPROVED → MATCH_FOUND → CLOSED
+//            ↘ REVISION_REQUESTED (öğrenciden düzeltme istendi)
+//            ↘ REJECTED
+//
+// getLostReportStatusLabel() bu kodları Türkçe etikete çevirir.
+// ============================================================
+
 export type LostReportStatus =
   | 'PENDING_REVIEW'
   | 'REVISION_REQUESTED'

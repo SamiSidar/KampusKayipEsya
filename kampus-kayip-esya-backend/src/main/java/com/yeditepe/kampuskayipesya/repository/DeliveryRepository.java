@@ -7,6 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * DeliveryRepository — Teslim kaydı sorguları.
+ */
 @Repository
 public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
 

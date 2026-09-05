@@ -3,6 +3,9 @@ package com.yeditepe.kampuskayipesya.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 
+/**
+ * Giriş isteği gövdesi: e-posta ve şifre.
+ */
 public class LoginRequest {
 
     @NotBlank(message = "Email boş olamaz")

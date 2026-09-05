@@ -1,17 +1,30 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { CommonActions, useNavigation } from '@react-navigation/native';
+import { CommonActions, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
 import { AppHeader } from '../components/AppHeader';
 import { StudentBottomBar } from '../components/StudentBottomBar';
 import { RootStackParamList } from '../navigation/types';
 
+// ============================================================
+// SuccessScreen — Ortak başarı ekranı.
+//
+// Ne yapar:
+// - 'from' parametresine göre farklı metin ve yönlendirme gösterir
+//   ('report' → bildiri gönderildi, 'admin' → işlem tamamlandı)
+// - Kullanıcıyı ilgili ana ekrana geri döndürür
+// ============================================================
+
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type SuccessRouteProp = RouteProp<RootStackParamList, 'Success'>;
 
 export function SuccessScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<SuccessRouteProp>();
+  const isFromRegister = route.params?.from === 'register';
+  const isFromAdmin = route.params?.from === 'admin';
 
   function resetTo(routeName: keyof RootStackParamList) {
     navigation.dispatch(
@@ -19,6 +32,68 @@ export function SuccessScreen() {
         index: 0,
         routes: [{ name: routeName }],
       })
+    );
+  }
+
+  if (isFromRegister) {
+    return (
+      <View style={styles.container}>
+        <AppHeader title="Kayıt Başarılı" showBack={false} showNotification={false} />
+
+        <View style={styles.content}>
+          <View style={styles.card}>
+            <View style={styles.successCircle}>
+              <Ionicons name="checkmark" size={54} color={colors.white} />
+            </View>
+
+            <Text style={styles.title}>Kayıt Başarılı!</Text>
+
+            <Text style={styles.description}>
+              Hesabınız başarıyla oluşturuldu. Şimdi giriş yaparak uygulamayı
+              kullanmaya başlayabilirsiniz.
+            </Text>
+
+            <Pressable
+              style={styles.primaryButton}
+              onPress={() => resetTo('Login')}
+              accessibilityLabel="Giriş yap"
+            >
+              <Text style={styles.primaryButtonText}>Giriş Yap</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  if (isFromAdmin) {
+    return (
+      <View style={styles.container}>
+        <AppHeader title="Başarılı" showBack={false} showNotification={false} />
+
+        <View style={styles.content}>
+          <View style={styles.card}>
+            <View style={styles.successCircle}>
+              <Ionicons name="checkmark" size={54} color={colors.white} />
+            </View>
+
+            <Text style={styles.title}>Bildiri Onaylandı</Text>
+
+            <Text style={styles.description}>
+              Bildiri başarıyla onaylandı ve aktif kayıp bildirimleri arasına eklendi.
+              Öğrenci bildirimi alacaktır.
+            </Text>
+
+            <Pressable
+              style={styles.primaryButton}
+              onPress={() => resetTo('AdminPanel')}
+              accessibilityLabel="Admin panele dön"
+            >
+              <Text style={styles.primaryButtonText}>Admin Panele Dön</Text>
+            </Pressable>
+          </View>
+        </View>
+      </View>
     );
   }
 
@@ -56,7 +131,7 @@ export function SuccessScreen() {
             </View>
           </View>
 
-          <Pressable accessibilityRole="button"
+          <Pressable
             style={styles.primaryButton}
             onPress={() => resetTo('MyReports')}
             accessibilityLabel="Bildirilerime git"
@@ -64,7 +139,7 @@ export function SuccessScreen() {
             <Text style={styles.primaryButtonText}>Bildirilerime Git</Text>
           </Pressable>
 
-          <Pressable accessibilityRole="button"
+          <Pressable
             style={styles.secondaryButton}
             onPress={() => resetTo('StudentHome')}
             accessibilityLabel="Ana sayfaya dön"

@@ -2,6 +2,16 @@ import { apiClient } from '../api/apiClient';
 import { ENDPOINTS } from '../api/endpoints';
 import { LoginRequest, LoginResponse, RegisterRequest, AuthUser } from '../types/auth';
 
+// ============================================================
+// authService — Kimlik doğrulama ile ilgili tüm API çağrıları.
+//
+// Kayıt, giriş, çıkış, e-posta doğrulama, şifre sıfırlama ve profil
+// güncelleme istekleri buradan geçer.
+//
+// Not: Bu dosya sadece HTTP isteğini atar. Token'ın saklanması ve
+// uygulama genelinde paylaşılması AuthContext'in işidir.
+// ============================================================
+
 export const authService = {
   login(payload: LoginRequest) {
     return apiClient.post<LoginResponse>(ENDPOINTS.auth.login, payload);

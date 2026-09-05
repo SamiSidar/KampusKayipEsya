@@ -7,6 +7,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * ClaimRequestRepository — Teslim talebi sorguları.
+ *
+ * Bir eşyaya gelen talepleri ve bir öğrencinin taleplerini listeler.
+ */
 @Repository
 public interface ClaimRequestRepository extends JpaRepository<ClaimRequest, Long> {
 

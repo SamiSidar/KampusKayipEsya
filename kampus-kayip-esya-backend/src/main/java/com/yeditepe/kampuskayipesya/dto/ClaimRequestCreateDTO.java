@@ -3,6 +3,12 @@ package com.yeditepe.kampuskayipesya.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * Teslim talebi oluşturma isteği.
+ *
+ * distinguishingFeature alanı, öğrencinin eşyayı tanıdığını kanıtlayan
+ * beyanıdır.
+ */
 public class ClaimRequestCreateDTO {
 
     @NotNull(message = "Eşya ID boş olamaz")

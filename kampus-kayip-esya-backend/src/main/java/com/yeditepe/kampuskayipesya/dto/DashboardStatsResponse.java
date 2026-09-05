@@ -1,5 +1,10 @@
 package com.yeditepe.kampuskayipesya.dto;
 
+/**
+ * Admin panelindeki dört özet sayı.
+ *
+ * onay bekleyen / sahibi bekleyen / aktif kayıp / teslim edilen
+ */
 public class DashboardStatsResponse {
 
     private long totalFoundItems;

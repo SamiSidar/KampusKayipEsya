@@ -8,6 +8,11 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * FoundItemRepository — Bulunan eşya sorguları.
+ *
+ * Duruma, kategoriye ve başlıkta arama yapmaya yarayan hazır metotlar içerir.
+ */
 @Repository
 public interface FoundItemRepository extends JpaRepository<FoundItem, Long> {
 

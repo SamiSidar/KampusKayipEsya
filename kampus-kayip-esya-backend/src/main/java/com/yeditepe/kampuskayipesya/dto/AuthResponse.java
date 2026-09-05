@@ -1,5 +1,8 @@
 package com.yeditepe.kampuskayipesya.dto;
 
+/**
+ * Başarılı giriş yanıtı: access token + refresh token + kullanıcı bilgisi.
+ */
 public class AuthResponse {
 
     private String token;

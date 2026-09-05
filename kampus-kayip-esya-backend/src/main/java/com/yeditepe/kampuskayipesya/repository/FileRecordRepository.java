@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
+/**
+ * FileRecordRepository — Yüklenen dosya kayıtlarının sorguları.
+ */
 @Repository
 public interface FileRecordRepository extends JpaRepository<FileRecord, Long> {
 

@@ -6,6 +6,16 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../theme/colors';
 import { RootStackParamList } from '../navigation/types';
 
+// ============================================================
+// AdminBottomBar — Yönetici alt menüsü.
+//
+// Üç bölüm: Panel / ortadaki büyük (+) butonu / Profil.
+// (+) butonu yeni bulunan eşya kaydı ekranını açar.
+//
+// Not: Sekmeler navigate yerine CommonActions.reset kullanır; böylece
+// sekme değiştirdikçe geri yığını şişmez.
+// ============================================================
+
 type AdminTab = 'panel' | 'plus' | 'profile';
 
 type AdminBottomBarProps = {
@@ -46,7 +56,7 @@ export function AdminBottomBar({ activeTab }: AdminBottomBarProps) {
 
   return (
     <View style={styles.container}>
-      <Pressable accessibilityRole="button" style={styles.sideTab} onPress={resetToAdminPanel} accessibilityLabel="Panel sekmesi">
+      <Pressable style={styles.sideTab} onPress={resetToAdminPanel} accessibilityLabel="Panel sekmesi">
         <Ionicons
           name={activeTab === 'panel' ? 'grid' : 'grid-outline'}
           size={27}
@@ -67,7 +77,7 @@ export function AdminBottomBar({ activeTab }: AdminBottomBarProps) {
         </Text>
       </Pressable>
 
-      <Pressable accessibilityRole="button"
+      <Pressable
         style={styles.plusButtonWrapper}
         onPress={resetToFoundItemCreate}
         accessibilityLabel="Yeni bulunan eşya ekle"
@@ -77,7 +87,7 @@ export function AdminBottomBar({ activeTab }: AdminBottomBarProps) {
         </View>
       </Pressable>
 
-      <Pressable accessibilityRole="button" style={styles.sideTab} onPress={resetToAdminProfile} accessibilityLabel="Profil sekmesi">
+      <Pressable style={styles.sideTab} onPress={resetToAdminProfile} accessibilityLabel="Profil sekmesi">
         <Ionicons
           name={activeTab === 'profile' ? 'person' : 'person-outline'}
           size={27}
@@ -164,4 +174,4 @@ const styles = StyleSheet.create({
     color: colors.yeditepeBlue,
     fontWeight: '800',
   },
-});
+});

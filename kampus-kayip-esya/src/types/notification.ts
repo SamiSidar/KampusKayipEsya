@@ -1,5 +1,12 @@
 import { ApiDateString, ApiId } from './common';
 
+// ============================================================
+// Bildirim tipleri.
+//
+// Bildirimde reportId veya itemId dolu gelirse, bildirime tıklandığında
+// kullanıcı ilgili kaydın detayına yönlendirilir.
+// ============================================================
+
 export type NotificationType =
   | 'REPORT_APPROVED'
   | 'MATCH_FOUND'

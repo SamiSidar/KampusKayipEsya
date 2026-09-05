@@ -4,6 +4,13 @@ import com.yeditepe.kampuskayipesya.dto.*;
 import com.yeditepe.kampuskayipesya.entity.*;
 import org.springframework.stereotype.Component;
 
+/**
+ * DtoMapper — Entity nesnelerini DTO'ya çevirir.
+ *
+ * Neden gerekli: Entity sınıfları veritabanı tablolarını temsil eder ve
+ * şifre gibi dışarı verilmemesi gereken alanlar içerir. Bu yüzden dışarıya
+ * doğrudan entity değil, sadece gerekli alanları taşıyan DTO döndürülür.
+ */
 @Component
 public class DtoMapper {
 

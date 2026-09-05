@@ -4,6 +4,12 @@ import com.yeditepe.kampuskayipesya.enums.NotificationType;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * Notification — Bildirim tablosu (notifications).
+ *
+ * Kullanıcıya gönderilen uygulama içi bildirimleri tutar.
+ * reportId / itemId dolu ise bildirime tıklandığında ilgili kayda gidilir.
+ */
 @Entity
 @Table(name = "notifications", indexes = {
         @Index(name = "idx_notification_user", columnList = "user_id"),

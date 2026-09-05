@@ -118,7 +118,7 @@ export function PersonalInfoScreen() {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable accessibilityRole="button" style={styles.headerSide} onPress={() => navigation.goBack()} accessibilityLabel="Geri dön">
+        <Pressable style={styles.headerSide} onPress={() => navigation.goBack()} accessibilityLabel="Geri dön">
           <Ionicons name="arrow-back" size={24} color={colors.white} />
         </Pressable>
         <Text style={styles.headerTitle}>Kişisel Bilgiler</Text>
@@ -228,7 +228,7 @@ export function PersonalInfoScreen() {
             </View>
 
             {/* Kaydet */}
-            <Pressable accessibilityRole="button"
+            <Pressable
               style={[
                 styles.saveButton,
                 (!hasProfileChanges || isProfileLoading) && styles.buttonDisabled,
@@ -323,7 +323,7 @@ export function PersonalInfoScreen() {
             </View>
 
             {/* Şifre Değiştir */}
-            <Pressable accessibilityRole="button"
+            <Pressable
               style={[styles.changePasswordButton, isPasswordLoading && styles.buttonDisabled]}
               onPress={handleChangePassword}
               disabled={isPasswordLoading}

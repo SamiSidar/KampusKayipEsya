@@ -9,6 +9,11 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
+/**
+ * RefreshTokenRepository — Refresh token sorguları.
+ *
+ * Çıkış yapıldığında kullanıcının tüm token'larını silmek için kullanılır.
+ */
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long> {
 
     Optional<RefreshToken> findByToken(String token);

@@ -4,6 +4,16 @@ import com.yeditepe.kampuskayipesya.enums.UserRole;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * User — Kullanıcı tablosu (users).
+ *
+ * Hem öğrenciyi hem yöneticiyi hem güvenlik görevlisini tutar; ayrım
+ * role alanıyla yapılır (UserRole).
+ *
+ * emailVerified / verificationCode / verificationCodeExpiry alanları
+ * e-posta doğrulama akışı için kullanılır: kayıt sırasında kod üretilip
+ * maille gönderilir, doğrulanınca emailVerified true olur.
+ */
 @Entity
 @Table(name = "users")
 public class User {
@@ -50,7 +60,7 @@ public class User {
         this.createdAt = LocalDateTime.now();
     }
 
-    // ==================== GETTER ve SETTER ====================
+
 
     public Long getId() {
         return id;

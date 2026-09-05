@@ -4,6 +4,12 @@ import com.yeditepe.kampuskayipesya.enums.UploadedFileType;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+/**
+ * FileRecord — Yüklenen dosya tablosu (file_records).
+ *
+ * Sunucuya yüklenen görsellerin kaydını tutar (orijinal ad, boyut, tür).
+ * Dosyanın kendisi diskte /app/uploads altında durur.
+ */
 @Entity
 @Table(name = "file_records")
 public class FileRecord {

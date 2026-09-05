@@ -8,6 +8,13 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * UserRepository — Kullanıcı veritabanı sorguları.
+ *
+ * Spring Data JPA sayesinde metot GÖVDESİ YAZILMAZ; metot adından SQL
+ * otomatik üretilir. Örnek: findByEmail(String) →
+ * SELECT * FROM users WHERE email = ?
+ */
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
 

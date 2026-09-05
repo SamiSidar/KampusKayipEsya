@@ -3,6 +3,9 @@ package com.yeditepe.kampuskayipesya.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+/**
+ * Teslim kaydı oluşturma isteği: hangi eşya, kime, hangi talep üzerine.
+ */
 public class DeliveryRequest {
 
     @NotNull(message = "Eşya ID boş olamaz")

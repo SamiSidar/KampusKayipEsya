@@ -2,6 +2,17 @@ import { ApiDateString, ApiId } from './common';
 import { FoundItem } from './foundItem';
 import { UserSummary } from './user';
 
+// ============================================================
+// Teslim talebi tipleri.
+//
+// Durum akışı: PENDING → APPROVED → COMPLETED
+//         ↘ INFO_REQUESTED (adminden ek bilgi istendi)
+//         ↘ REJECTED
+//
+// distinguishingFeature alanı önemlidir: öğrencinin eşyayı tanıdığını
+// kanıtlayan beyanıdır, admin doğrulamayı buna bakarak yapar.
+// ============================================================
+
 export type ClaimRequestStatus =
   | 'PENDING'
   | 'INFO_REQUESTED'

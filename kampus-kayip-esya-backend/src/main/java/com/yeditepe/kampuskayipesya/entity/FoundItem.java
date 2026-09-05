@@ -6,6 +6,15 @@ import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * FoundItem — Bulunan eşya tablosu (found_items).
+ *
+ * Güvenlik görevlisinin teslim aldığı eşyaların kaydıdır.
+ * Durum akışı: WAITING_OWNER → CLAIM_REQUESTED → DELIVERED / ARCHIVED
+ *
+ * @PrePersist ile kayıt oluşturulurken createdAt ve başlangıç durumu
+ * otomatik atanır.
+ */
 @Entity
 @Table(name = "found_items", indexes = {
         @Index(name = "idx_found_item_status", columnList = "status"),
