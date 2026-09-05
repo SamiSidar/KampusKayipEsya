@@ -56,7 +56,14 @@ services:
       MAIL_USERNAME: ${MAIL_USERNAME:-}
       MAIL_PASSWORD: ${MAIL_PASSWORD:-}
     volumes:
-      - backend_uploads:/app/uploads
+      # Bind mount (isimli volume DEGIL) — bilerek boyle.
+      # Isimli volume kullanildiginda, backend'i IntelliJ'den local
+      # calistirinca dosyalar host'taki uploads/ klasorune, Docker'da
+      # calistirinca ise volume'un icine yaziliyordu. Veritabani ise
+      # ikisinde de ayni oldugu icin, DB'deki kayit bir dosyayi
+      # gosteriyor ama o dosya digerinde bulunuyordu -> gorseller 404.
+      # Bind mount ile her iki calisma bicimi ayni klasoru paylasir.
+      - ./kampus-kayip-esya-backend/uploads:/app/uploads
     depends_on:
       mysql:
         condition: service_healthy
@@ -81,7 +88,6 @@ services:
 
 volumes:
   mysql_data:
-  backend_uploads:
 
 networks:
   kampus-net:
